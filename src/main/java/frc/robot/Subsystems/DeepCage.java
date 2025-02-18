@@ -9,8 +9,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class DeepCage extends SubsystemBase {
-    private final TalonFX m_intakeWheel = new TalonFX(0, "rio");
-    private final TalonFX m_deepCagePitch = new TalonFX(1, "rio");
+    private final TalonFX m_intakeWheel = new TalonFX(14, "rio");
+    private final TalonFX m_deepCagePitch = new TalonFX(15, "rio");
 
     private final VelocityTorqueCurrentFOC m_intakeWheelVelocityRequest = new VelocityTorqueCurrentFOC(0.0)
             .withSlot(0);
