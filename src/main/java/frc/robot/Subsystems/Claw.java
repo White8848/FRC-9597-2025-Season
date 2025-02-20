@@ -7,6 +7,8 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Second;
 
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.configs.CANrangeConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
@@ -30,7 +32,6 @@ public class Claw extends SubsystemBase {
 
     private final CANcoder m_clawPitchEncoder = new CANcoder(9, "rio");
     private final CANrange m_canRange = new CANrange(10, "rio");
-
 
     public Claw() {
         // claw pipe wheel configs
@@ -77,12 +78,19 @@ public class Claw extends SubsystemBase {
                 // Take approximately 0.1 seconds to reach max accel
                 .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(100));
 
-        // set Encoder configs
+        // set Feedback configs
         clawPitchConfigs.Feedback.FeedbackRemoteSensorID = m_clawPitchEncoder.getDeviceID();
         clawPitchConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
         clawPitchConfigs.Feedback.RotorToSensorRatio = 2.5; // 30:12
 
         m_clawPitch.getConfigurator().apply(clawPitchConfigs);
+
+        // set CANrange configs as default
+        m_canRange.getConfigurator().apply(new CANrangeConfiguration());
+
+        // set CANcoder configs as default
+        m_clawPitchEncoder.getConfigurator().apply(new CANcoderConfiguration());
+
     }
 
     /**
@@ -112,16 +120,35 @@ public class Claw extends SubsystemBase {
         m_clawWheel.setControl(m_clawWheelVelocityRequest.withVelocity(velocity));
     }
 
+    /**
+     * Runs the claw wheel intake.
+     * @return 
+     */
     public Command clawWheelIntake() {
-        return runEnd(() -> setClawPipeWheelVelocity(0.0),
+        return runEnd(() -> {
+            // If the ball is not detected, run the claw wheel
+            // (need to test the proximity parameter)
+            if (m_canRange.getIsDetected().getValue() == false) {
+                setClawPipeWheelVelocity(1.0);// work
+            }
+            setClawPipeWheelVelocity(0.0);// stop
+        },
                 () -> setClawPipeWheelVelocity(0.0));
     }
 
+    /**
+     * Runs the claw wheel outtake.
+     * @return
+     */
     public Command clawWheelOuttake() {
-        return runEnd(() -> setClawPipeWheelVelocity(0.0),
+        return runEnd(() -> setClawPipeWheelVelocity(-1.0),
                 () -> setClawPipeWheelVelocity(0.0));
     }
 
+    /**
+     * Runs the claw pipe wheel intake.
+     * @return
+     */
     public Command getBall() {
         return runEnd(() -> {
             setClawPipeWheelVelocity(0.0);
@@ -133,6 +160,10 @@ public class Claw extends SubsystemBase {
                 });
     }
 
+    /**
+     * Runs the claw wheel outtake.
+     * @return
+     */
     public Command shootBall() {
         return runEnd(() -> {
             setClawPipeWheelVelocity(0.0);
