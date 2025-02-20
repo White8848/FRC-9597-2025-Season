@@ -3,6 +3,10 @@ package frc.robot.Subsystems;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.Command;
 
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
+import static edu.wpi.first.units.Units.Second;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
@@ -10,8 +14,7 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
-
-import frc.robot.Constants;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 
 public class Claw extends SubsystemBase {
     private final TalonFX m_clawPitch = new TalonFX(9, "rio");
@@ -28,13 +31,12 @@ public class Claw extends SubsystemBase {
     private final CANcoder m_clawPitchEncoder = new CANcoder(9, "rio");
     private final CANrange m_canRange = new CANrange(10, "rio");
 
-    private int m_clawPitchPositionFlag = 0;
 
     public Claw() {
         // claw pipe wheel configs
         var clawPipeWheelConfigs = new TalonFXConfiguration();
 
-        clawPipeWheelConfigs.Slot0.kS = 0;
+        clawPipeWheelConfigs.Slot0.kS = 0;// Static Friction (Velocity)
         clawPipeWheelConfigs.Slot0.kV = 0;
         clawPipeWheelConfigs.Slot0.kA = 0;
         clawPipeWheelConfigs.Slot0.kP = 0;
@@ -46,7 +48,7 @@ public class Claw extends SubsystemBase {
         // claw wheel configs
         var clawWheelConfigs = new TalonFXConfiguration();
 
-        clawWheelConfigs.Slot0.kS = 0;
+        clawWheelConfigs.Slot0.kS = 0;// Static Friction (Velocity)
         clawWheelConfigs.Slot0.kV = 0;
         clawWheelConfigs.Slot0.kA = 0;
         clawWheelConfigs.Slot0.kP = 0;
@@ -58,21 +60,27 @@ public class Claw extends SubsystemBase {
         // claw pitch configs
         var clawPitchConfigs = new TalonFXConfiguration();
 
-        clawPitchConfigs.Slot0.kS = 0;
+        clawPitchConfigs.Slot0.kG = 0; // Gravity
+        clawPitchConfigs.Slot0.kS = 0; // Static Friction
         clawPitchConfigs.Slot0.kV = 0;
         clawPitchConfigs.Slot0.kA = 0;
         clawPitchConfigs.Slot0.kP = 0;
         clawPitchConfigs.Slot0.kI = 0;
         clawPitchConfigs.Slot0.kD = 0;
+        clawPitchConfigs.Slot0.GravityType = GravityTypeValue.Arm_Cosine; // Use arm cosine gravity
 
-        // set Motion Magic Expo settings
-        clawPitchConfigs.MotionMagic.MotionMagicCruiseVelocity = 0; // Unlimited cruise velocity
-        clawPitchConfigs.MotionMagic.MotionMagicExpo_kV = 0.0; // kV is around 0.12 V/rps
-        clawPitchConfigs.MotionMagic.MotionMagicExpo_kA = 0.0; // Use a slower kA of 0.1 V/(rps/s)
+        // set Motion Magic settings
+        // 5 (mechanism) rotations per second cruise
+        clawPitchConfigs.MotionMagic.withMotionMagicCruiseVelocity(RotationsPerSecond.of(5))
+                // Take approximately 0.5 seconds to reach max vel
+                .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(10))
+                // Take approximately 0.1 seconds to reach max accel
+                .withMotionMagicJerk(RotationsPerSecondPerSecond.per(Second).of(100));
 
         // set Encoder configs
         clawPitchConfigs.Feedback.FeedbackRemoteSensorID = m_clawPitchEncoder.getDeviceID();
-        clawPitchConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RemoteCANcoder;
+        clawPitchConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
+        clawPitchConfigs.Feedback.RotorToSensorRatio = 2.5; // 30:12
 
         m_clawPitch.getConfigurator().apply(clawPitchConfigs);
     }
@@ -102,67 +110,6 @@ public class Claw extends SubsystemBase {
      */
     public void setClawWheelVelocity(double velocity) {
         m_clawWheel.setControl(m_clawWheelVelocityRequest.withVelocity(velocity));
-    }
-
-    /**
-     * Moves the claw pitch up.
-     * 
-     * @return
-     */
-    public Command clawPitchUp() {
-        return runOnce(() -> {
-            m_clawPitchPositionFlag++;
-            if (m_clawPitchPositionFlag > 5)
-                m_clawPitchPositionFlag = 5;
-            switch (m_clawPitchPositionFlag) {
-                case 1:
-                    setClawPitchPosition(Constants.CLAW_PITCH_INTAKE);
-                    m_clawPitchEncoder.getAbsolutePosition();
-                    break;
-                case 2:
-                    setClawPitchPosition(Constants.CLAW_PITCH_REEF_2);
-                    break;
-                case 3:
-                    setClawPitchPosition(Constants.CLAW_PITCH_REEF_3);
-                    break;
-                case 4:
-                    setClawPitchPosition(Constants.CLAW_PITCH_REEF_4);
-                    break;
-                case 5:
-                    setClawPitchPosition(Constants.CLAW_PITCH_BARGE);
-                    break;
-            }
-        });
-    }
-
-    /**
-     * Moves the claw pitch down.
-     * 
-     * @return
-     */
-    public Command clawPitchDown() {
-        return runOnce(() -> {
-            m_clawPitchPositionFlag--;
-            if (m_clawPitchPositionFlag < 0)
-                m_clawPitchPositionFlag = 0;
-            switch (m_clawPitchPositionFlag) {
-                case 0:
-                    setClawPitchPosition(Constants.CLAW_PITCH_START);
-                    break;
-                case 1:
-                    setClawPitchPosition(Constants.CLAW_PITCH_INTAKE);
-                    break;
-                case 2:
-                    setClawPitchPosition(Constants.CLAW_PITCH_REEF_2);
-                    break;
-                case 3:
-                    setClawPitchPosition(Constants.CLAW_PITCH_REEF_3);
-                    break;
-                case 4:
-                    setClawPitchPosition(Constants.CLAW_PITCH_REEF_4);
-                    break;
-            }
-        });
     }
 
     public Command clawWheelIntake() {
