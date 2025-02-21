@@ -1,12 +1,17 @@
 package frc.robot.Subsystems;
 
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 
+import static edu.wpi.first.units.Units.Volts;
+import edu.wpi.first.units.measure.Velocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 public class DeepCage extends SubsystemBase {
     private final TalonFX m_intakeWheel = new TalonFX(14, "rio");
@@ -18,6 +23,45 @@ public class DeepCage extends SubsystemBase {
             .withSlot(0);
     private final PositionTorqueCurrentFOC m_deepCagePitchPositionRequest = new PositionTorqueCurrentFOC(0.0)
             .withSlot(1);
+
+    //sysidoutine need voltageout mode
+    private final VoltageOut m_intakeWheelVoltageRequest_sysid = new VoltageOut(0.0);
+    private final VoltageOut m_deepCagePitchVoltageRequest_sysid = new VoltageOut(0.0);
+ 
+    /* SysId routine for characterizing intakewheel. This is used to find PID gains for the motors. */
+    private final SysIdRoutine m_sysIdRoutineIntakeWheel = new SysIdRoutine(
+        new SysIdRoutine.Config(
+            null,        // Use default ramp rate (1 V/s)
+            Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
+            null,        // Use default timeout (10 s)
+            // Log state with SignalLogger class
+            state -> SignalLogger.writeString("SysIdIntakeWheel_State", state.toString())
+        ),
+        new SysIdRoutine.Mechanism(
+            output -> m_intakeWheel.setControl(m_intakeWheelVoltageRequest_sysid.withOutput(output)),
+            null,
+            this
+        )
+    );
+
+    /* SysId routine for characterizing deepCagePitch. This is used to find PID gains for the  motors. */
+    private final SysIdRoutine m_sysIdRoutineDeepCagePitch = new SysIdRoutine(
+        new SysIdRoutine.Config(
+            null,        // Use default ramp rate (1 V/s)
+            Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
+            null,        // Use default timeout (10 s)
+            // Log state with SignalLogger class
+            state -> SignalLogger.writeString("SysIdDeepCagePitch_State", state.toString())
+        ),
+        new SysIdRoutine.Mechanism(
+            output -> m_deepCagePitch.setControl(m_deepCagePitchVoltageRequest_sysid.withOutput(output)),
+            null,
+            this
+        )
+    );
+
+    private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineIntakeWheel;
+
 
     public DeepCage() {
         var intakeWheelConfigs = new TalonFXConfiguration();
@@ -111,6 +155,29 @@ public class DeepCage extends SubsystemBase {
             double currentPosition = m_deepCagePitch.getPosition().getValueAsDouble();
             setDeepCagePitchPosition(currentPosition);
         });
+    }
+
+    
+    /**
+     * Runs the SysId Quasistatic test in the given direction for the routine
+     * specified by {@link #m_sysIdRoutineToApply}.
+     *
+     * @param direction Direction of the SysId Quasistatic test
+     * @return Command to run
+     */
+    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+        return m_sysIdRoutineToApply.quasistatic(direction);
+    }
+
+    /**
+     * Runs the SysId Dynamic test in the given direction for the routine
+     * specified by {@link #m_sysIdRoutineToApply}.
+     *
+     * @param direction Direction of the SysId Dynamic test
+     * @return Command to run
+     */
+    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+        return m_sysIdRoutineToApply.dynamic(direction);
     }
     
 

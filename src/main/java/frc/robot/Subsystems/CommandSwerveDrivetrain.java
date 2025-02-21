@@ -1,18 +1,29 @@
-package frc.robot.subsystems;
+package frc.robot.Subsystems;
 
 import java.util.function.Supplier;
+
+import org.photonvision.PhotonCamera;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 
+
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+
 import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -23,6 +34,18 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
+
+import org.photonvision.PhotonCamera;
+import org.photonvision.EstimatedRobotPose;
+import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
+import org.photonvision.simulation.PhotonCameraSim;
+import org.photonvision.simulation.SimCameraProperties;
+import org.photonvision.simulation.VisionSystemSim;
+import org.photonvision.targeting.PhotonTrackedTarget;
+
+import static frc.robot.Constants.Vision.*;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -215,6 +238,35 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return m_sysIdRoutineToApply.dynamic(direction);
     }
 
+    //   /* PhotonVision camera */
+    //   private final PhotonCamera frontCamera = new PhotonCamera("photonvision-front");
+    //   private final PhotonCamera leftCamera = new PhotonCamera("photonvision-left");
+    //   // The field from AprilTagFields will be different depending on the game.
+  
+    //   /* PhotonVision camera Transform3d */
+    //   private final Transform3d robotToFrontCam = new Transform3d(
+    //       new Translation3d(0.5, 0.0, 0.5), 
+    //       new Rotation3d(0, 0, 0)
+    //   );
+    //   private final Transform3d robotToLeftCam = new Transform3d(
+    //       new Translation3d(0.0, -0.3, 0.5), 
+    //       new Rotation3d(0, 0, Math.toRadians(-90)) 
+    //   );
+  
+    //   /* PhotonVision camera Estimator */
+    //   private final PhotonPoseEstimator frontEstimator = new PhotonPoseEstimator(
+    //       aprilTagFieldLayout, 
+    //       PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
+    //       robotToFrontCam
+    //   );
+  
+    //   private final PhotonPoseEstimator leftEstimator = new PhotonPoseEstimator(
+    //       aprilTagFieldLayout,
+    //       PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
+    //       robotToLeftCam
+    //   );
+  
+
     @Override
     public void periodic() {
         /*
@@ -234,7 +286,44 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 m_hasAppliedOperatorPerspective = true;
             });
         }
+
+        //vision processing
+        //processVisionData();
     }
+
+    // // Process vision data from PhotonVision
+    // private void processVisionData() {
+
+    //     SwerveDriveState m_state = new SwerveDriveState();
+
+    //     // get the current pose from the drivetrain
+    //     Pose2d odometryPose = m_state.Pose;
+    
+    //     // front camera
+    //     processCamera(frontEstimator, odometryPose);
+    //     // left camera
+    //     processCamera(leftEstimator, odometryPose);
+    // }
+
+
+    // private void processCamera(PhotonPoseEstimator estimator, Pose2d referencePose) {
+    //     estimator.setReferencePose(referencePose); // set the reference pose
+    //     var result = estimator.update();        
+    //     if (result.isPresent()) {
+    //         EstimatedRobotPose estimation = result.get();
+    //         // check if we have enough targets to trust the estimation
+    //         if (estimation.targetsUsed.size() >= 2) {
+               
+    //             //Matrix<N3, N1> stdDevs = VecBuilder.fill(0.3, 0.3, 0.5);
+    //             addVisionMeasurement(
+    //                 estimation.estimatedPose.toPose2d(),
+    //                 estimation.timestampSeconds
+    //                 //stdDevs
+    //             );
+    //         }
+    //     }
+    // }
+
 
     private void startSimThread() {
         m_lastSimTime = Utils.getCurrentTimeSeconds();
