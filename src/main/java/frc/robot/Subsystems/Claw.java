@@ -1,8 +1,9 @@
 package frc.robot.Subsystems;
 
 import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.configs.CANrangeConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
@@ -17,7 +18,6 @@ import static edu.wpi.first.units.Units.Volts;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Constants;
 
 
 public class Claw extends SubsystemBase {
@@ -142,11 +142,18 @@ public class Claw extends SubsystemBase {
         clawPitchConfigs.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
         clawPitchConfigs.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0
 
-        // set Encoder configs
+        // set Feedback configs
         clawPitchConfigs.Feedback.FeedbackRemoteSensorID = m_clawPitchEncoder.getDeviceID();
-        clawPitchConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RemoteCANcoder;
+        clawPitchConfigs.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
+        clawPitchConfigs.Feedback.RotorToSensorRatio = 2.5; // 30:12
 
         m_clawPitch.getConfigurator().apply(clawPitchConfigs);
+        
+        // set CANrange configs as default
+        m_canRange.getConfigurator().apply(new CANrangeConfiguration());
+
+        // set CANcoder configs as default
+        m_clawPitchEncoder.getConfigurator().apply(new CANcoderConfiguration());
     }
 
     /**
