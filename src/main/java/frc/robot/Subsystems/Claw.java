@@ -15,8 +15,13 @@ import com.ctre.phoenix6.signals.GravityTypeValue;
 
 import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
+import edu.wpi.first.units.measure.Time;
+
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 
@@ -26,7 +31,7 @@ public class Claw extends SubsystemBase {
     private final TalonFX m_clawWheel = new TalonFX(11, "canivore");
 
     private final CANcoder m_clawPitchEncoder = new CANcoder(5, "canivore");
-    private final CANrange m_canRange = new CANrange(10, "canivore");
+    private final CANrange m_canRange = new CANrange(1, "canivore");
     
     // set control mode for each motor
     private final MotionMagicVoltage m_clawPitchPositionRequest = new MotionMagicVoltage(0.0)
@@ -102,12 +107,12 @@ public class Claw extends SubsystemBase {
         // claw pipe wheel configs
         var clawPipeWheelConfigs = new TalonFXConfiguration();
 
-        clawPipeWheelConfigs.Slot0.kS = 0.3;
-        clawPipeWheelConfigs.Slot0.kV = 0.11;
+        clawPipeWheelConfigs.Slot0.kS = 4.7;
+        clawPipeWheelConfigs.Slot0.kV = 0.09;
         clawPipeWheelConfigs.Slot0.kA = 0;
-        clawPipeWheelConfigs.Slot0.kP = 0;
+        clawPipeWheelConfigs.Slot0.kP = 5;
         clawPipeWheelConfigs.Slot0.kI = 0;
-        clawPipeWheelConfigs.Slot0.kD = 0.08;
+        clawPipeWheelConfigs.Slot0.kD = 0.25;
 
         m_clawPipeWheel.getConfigurator().apply(clawPipeWheelConfigs);
 
@@ -187,16 +192,19 @@ public class Claw extends SubsystemBase {
      * Runs the claw wheel intake.
      * @return 
      */
+
     public Command clawWheelIntake() {
-        return runEnd(() -> {
-            // If the ball is not detected, run the claw wheel
-            // (need to test the proximity parameter)
-            if (m_canRange.getIsDetected().getValue() == false) {
-                setClawPipeWheelVelocity(1.0);// work
-            }
-            setClawPipeWheelVelocity(0.0);// stop
-        },
-                () -> setClawPipeWheelVelocity(0.0));
+       
+        return runEnd(
+            () -> setClawPipeWheelVelocity(-15.0),
+            
+            () -> new WaitCommand(0.1).andThen(() -> setClawPipeWheelVelocity(0)).schedule()
+                //setClawPipeWheelVelocity(0);
+                //System.out.println("Ball is detected: ");
+            
+
+        ).until(()->m_canRange.getIsDetected().getValue());
+        
     }
 
     /**
@@ -204,8 +212,14 @@ public class Claw extends SubsystemBase {
      * @return
      */
     public Command clawWheelOuttake() {
-        return runEnd(() -> setClawPipeWheelVelocity(-1.0),
-                () -> setClawPipeWheelVelocity(0.0));
+    
+        return startEnd(
+            () -> setClawPipeWheelVelocity(-25.0),
+
+            () -> setClawPipeWheelVelocity(0)
+        
+        );
+        
     }
 
     /**
