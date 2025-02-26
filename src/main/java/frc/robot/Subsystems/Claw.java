@@ -24,7 +24,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
-
 public class Claw extends SubsystemBase {
     private final TalonFX m_clawPitch = new TalonFX(9, "canivore");
     private final TalonFX m_clawPipeWheel = new TalonFX(10, "canivore");
@@ -32,7 +31,7 @@ public class Claw extends SubsystemBase {
 
     private final CANcoder m_clawPitchEncoder = new CANcoder(5, "canivore");
     private final CANrange m_canRange = new CANrange(1, "canivore");
-    
+
     // set control mode for each motor
     private final MotionMagicVoltage m_clawPitchPositionRequest = new MotionMagicVoltage(0.0)
             .withSlot(0);
@@ -43,65 +42,62 @@ public class Claw extends SubsystemBase {
 
     private int m_clawPitchPositionFlag = 0;
 
-    //sysidroutine need voltageout mode
+    // sysidroutine need voltageout mode
     private final VoltageOut m_clawPitchlVoltageRequest_sysid = new VoltageOut(0.0);
     private final VoltageOut m_clawPipeWheelVoltageRequest_sysid = new VoltageOut(0.0);
     private final VoltageOut m_clawWheelVoltageRequest_sysid = new VoltageOut(0.0);
 
-
-    /* SysId routine for characterizing clawpitch. This is used to find PID gains for the motors. */
+    /*
+     * SysId routine for characterizing clawpitch. This is used to find PID gains
+     * for the motors.
+     */
     private final SysIdRoutine m_sysIdRoutineClawPitch = new SysIdRoutine(
-        new SysIdRoutine.Config(
-            Volts.per(Second).of(0.5),        // Use default ramp rate (1 V/s)
-            //null,
-            Volts.of(1), // Reduce dynamic step voltage to 4 V to prevent brownout
-            null,        // Use default timeout (10 s)
-            // Log state with SignalLogger class
-            state -> SignalLogger.writeString("SysIdClawPitch_State", state.toString())
-        ),
-        new SysIdRoutine.Mechanism(
-            output -> m_clawPitch.setControl(m_clawPitchlVoltageRequest_sysid.withOutput(output)),
-            null,
-            this
-        )
-    );
+            new SysIdRoutine.Config(
+                    Volts.per(Second).of(0.5), // Use default ramp rate (1 V/s)
+                    // null,
+                    Volts.of(1), // Reduce dynamic step voltage to 4 V to prevent brownout
+                    null, // Use default timeout (10 s)
+                    // Log state with SignalLogger class
+                    state -> SignalLogger.writeString("SysIdClawPitch_State", state.toString())),
+            new SysIdRoutine.Mechanism(
+                    output -> m_clawPitch.setControl(m_clawPitchlVoltageRequest_sysid.withOutput(output)),
+                    null,
+                    this));
 
-    /* SysId routine for characterizing clawpipewheel. This is used to find PID gains for the  motors. */
+    /*
+     * SysId routine for characterizing clawpipewheel. This is used to find PID
+     * gains for the motors.
+     */
     private final SysIdRoutine m_sysIdRoutineClawPipeWheel = new SysIdRoutine(
-        new SysIdRoutine.Config(
-            null,        // Use default ramp rate (1 V/s)
-            Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
-            null,        // Use default timeout (10 s)
-            // Log state with SignalLogger class
-            state -> SignalLogger.writeString("SysIdClawPipeWheel_State", state.toString())
-        ),
-        new SysIdRoutine.Mechanism(
-            output -> m_clawPipeWheel.setControl(m_clawPipeWheelVoltageRequest_sysid.withOutput(output)),
-            null,
-            this
-        )
-    );
+            new SysIdRoutine.Config(
+                    null, // Use default ramp rate (1 V/s)
+                    Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
+                    null, // Use default timeout (10 s)
+                    // Log state with SignalLogger class
+                    state -> SignalLogger.writeString("SysIdClawPipeWheel_State", state.toString())),
+            new SysIdRoutine.Mechanism(
+                    output -> m_clawPipeWheel.setControl(m_clawPipeWheelVoltageRequest_sysid.withOutput(output)),
+                    null,
+                    this));
 
-    /* SysId routine for characterizing calwwheel. This is used to find PID gains for the  motors. */
+    /*
+     * SysId routine for characterizing calwwheel. This is used to find PID gains
+     * for the motors.
+     */
     private final SysIdRoutine m_sysIdRoutineClawWheel = new SysIdRoutine(
-        new SysIdRoutine.Config(
-            null,        // Use default ramp rate (1 V/s)
-            Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
-            null,        // Use default timeout (10 s)
-            // Log state with SignalLogger class
-            state -> SignalLogger.writeString("SysIdClawWheel_State", state.toString())
-        ),
-        new SysIdRoutine.Mechanism(
-            output ->m_clawWheel.setControl(m_clawWheelVoltageRequest_sysid.withOutput(output)),
-            null,
-            this
-        )
-    );
+            new SysIdRoutine.Config(
+                    null, // Use default ramp rate (1 V/s)
+                    Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
+                    null, // Use default timeout (10 s)
+                    // Log state with SignalLogger class
+                    state -> SignalLogger.writeString("SysIdClawWheel_State", state.toString())),
+            new SysIdRoutine.Mechanism(
+                    output -> m_clawWheel.setControl(m_clawWheelVoltageRequest_sysid.withOutput(output)),
+                    null,
+                    this));
 
-    
-    //define which motor is used for testing
+    // define which motor is used for testing
     private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineClawPitch;
-
 
     public Claw() {
         // claw pipe wheel configs
@@ -153,7 +149,7 @@ public class Claw extends SubsystemBase {
         clawPitchConfigs.Feedback.RotorToSensorRatio = 2.5; // 30:12
 
         m_clawPitch.getConfigurator().apply(clawPitchConfigs);
-        
+
         // set CANrange configs as default
         m_canRange.getConfigurator().apply(new CANrangeConfiguration());
 
@@ -189,41 +185,52 @@ public class Claw extends SubsystemBase {
     }
 
     /**
+     * Gets the claw pitch position.
+     * 
+     * @return
+     */
+    public double getClawPitchPosition() {
+        return m_clawPitchEncoder.getPosition().getValueAsDouble();
+    }
+
+    /**
      * Runs the claw wheel intake.
-     * @return 
+     * 
+     * @return
      */
 
     public Command clawWheelIntake() {
-       
-        return runEnd(
-            () -> setClawPipeWheelVelocity(-15.0),
-            
-            () -> new WaitCommand(0.1).andThen(() -> setClawPipeWheelVelocity(0)).schedule()
-                //setClawPipeWheelVelocity(0);
-                //System.out.println("Ball is detected: ");
-            
 
-        ).until(()->m_canRange.getIsDetected().getValue());
-        
+        return runEnd(
+                () -> setClawPipeWheelVelocity(-15.0),
+
+                () -> new WaitCommand(0.1).andThen(() -> setClawPipeWheelVelocity(0)).schedule()
+        // setClawPipeWheelVelocity(0);
+        // System.out.println("Ball is detected: ");
+
+        ).until(() -> m_canRange.getIsDetected().getValue());
+
     }
 
     /**
      * Runs the claw wheel outtake.
+     * 
      * @return
      */
     public Command clawWheelOuttake() {
-    
-        return startEnd(
-            () -> setClawPipeWheelVelocity(-25.0),
 
-            () -> setClawPipeWheelVelocity(0)
-        
+        return startEnd(
+                () -> setClawPipeWheelVelocity(-25.0),
+
+                () -> setClawPipeWheelVelocity(0)
+
         );
-        
+
     }
 
     /**
      * Runs the claw pipe wheel intake.
+     * 
      * @return
      */
     public Command getBall() {
@@ -239,6 +246,7 @@ public class Claw extends SubsystemBase {
 
     /**
      * Runs the claw wheel outtake.
+     * 
      * @return
      */
     public Command shootBall() {
@@ -273,6 +281,5 @@ public class Claw extends SubsystemBase {
     public Command sysIdDynamic(SysIdRoutine.Direction direction) {
         return m_sysIdRoutineToApply.dynamic(direction);
     }
-
 
 }
