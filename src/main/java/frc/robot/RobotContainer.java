@@ -33,6 +33,7 @@ public class RobotContainer {
         INTAKE
     }    
     private TestMode currentTestMode = TestMode.ELEVATOR; // FLAG
+    
 
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
@@ -62,6 +63,8 @@ public class RobotContainer {
     }
 
     private void configureBindings() {
+        //************************************************************ drivetrain ***************************************************
+        
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
         drivetrain.setDefaultCommand(
@@ -81,11 +84,21 @@ public class RobotContainer {
         // reset the field-centric heading on left bumper press
         joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
+        drivetrain.registerTelemetry(logger::telemeterize);
+
+
+        //**************************************************************** Claw ********************************************************
+        joystick.start().whileTrue(claw.clawWheelIntake());
+
+        //test clawWheelOuttake
+        joystick.back().whileTrue(claw.clawWheelOuttake());
+        
+        //*************************************************************** Eevelator ****************************************************
         //test elevator to a desired position
         joystick.rightBumper().onTrue(elevator.MoveToLevel(10.0));
 
-        drivetrain.registerTelemetry(logger::telemeterize);
 
+        //************************************* ************************* Sysidroutine *************************************************
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
 

@@ -12,14 +12,11 @@ import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.GravityTypeValue;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
-import edu.wpi.first.units.measure.Time;
-
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -100,6 +97,15 @@ public class Claw extends SubsystemBase {
     private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineClawPitch;
 
     public Claw() {
+        // clawPitchEncoder configs
+        var clawPitchEncoderConfigs = new CANcoderConfiguration();
+
+        clawPitchEncoderConfigs.MagnetSensor.MagnetOffset=0.31543;//offset
+        clawPitchEncoderConfigs.MagnetSensor.AbsoluteSensorDiscontinuityPoint=0.5;
+        clawPitchEncoderConfigs.MagnetSensor.SensorDirection=SensorDirectionValue.Clockwise_Positive;
+
+        m_clawPitchEncoder.getConfigurator().apply(clawPitchEncoderConfigs);
+
         // claw pipe wheel configs
         var clawPipeWheelConfigs = new TalonFXConfiguration();
 
@@ -115,10 +121,10 @@ public class Claw extends SubsystemBase {
         // claw wheel configs
         var clawWheelConfigs = new TalonFXConfiguration();
 
-        clawWheelConfigs.Slot0.kS = 0.23;
-        clawWheelConfigs.Slot0.kV = 0.101;
+        clawWheelConfigs.Slot0.kS = 1.5;
+        clawWheelConfigs.Slot0.kV = 0.08;
         clawWheelConfigs.Slot0.kA = 0;
-        clawWheelConfigs.Slot0.kP = 0.05;
+        clawWheelConfigs.Slot0.kP = 5;
         clawWheelConfigs.Slot0.kI = 0;
         clawWheelConfigs.Slot0.kD = 0;
 
@@ -130,14 +136,14 @@ public class Claw extends SubsystemBase {
         clawPitchConfigs.Slot0.kS = 0.5;
         clawPitchConfigs.Slot0.kV = 0.5;
         clawPitchConfigs.Slot0.kA = 0;
-        clawPitchConfigs.Slot0.kP = 20;
+        clawPitchConfigs.Slot0.kP = 30;
         clawPitchConfigs.Slot0.kI = 0;
         clawPitchConfigs.Slot0.kD = 0;
-        clawPitchConfigs.Slot0.kG = 0.25;
+        clawPitchConfigs.Slot0.kG = 0.15;
         clawPitchConfigs.Slot0.withGravityType(GravityTypeValue.Arm_Cosine);
 
         // set Motion Magic Expo settings
-        clawPitchConfigs.MotionMagic.MotionMagicAcceleration = 20; // Acceleration is around 40 rps/s
+        clawPitchConfigs.MotionMagic.MotionMagicAcceleration = 15; // Acceleration is around 40 rps/s
         clawPitchConfigs.MotionMagic.MotionMagicCruiseVelocity = 40; // Unlimited cruise velocity
         clawPitchConfigs.MotionMagic.MotionMagicExpo_kV = 0.15; // kV is around 0.12 V/rps
         clawPitchConfigs.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
@@ -153,8 +159,6 @@ public class Claw extends SubsystemBase {
         // set CANrange configs as default
         m_canRange.getConfigurator().apply(new CANrangeConfiguration());
 
-        // set CANcoder configs as default
-        m_clawPitchEncoder.getConfigurator().apply(new CANcoderConfiguration());
     }
 
     /**
@@ -200,13 +204,18 @@ public class Claw extends SubsystemBase {
      */
 
     public Command clawWheelIntake() {
-
+       
         return runEnd(
-                () -> setClawPipeWheelVelocity(-15.0),
-
-                () -> new WaitCommand(0.1).andThen(() -> setClawPipeWheelVelocity(0)).schedule()
-        // setClawPipeWheelVelocity(0);
-        // System.out.println("Ball is detected: ");
+            () ->   { if(!m_canRange.getIsDetected().getValue())
+                        {
+                            setClawPipeWheelVelocity(-20.0);
+                        }
+                    },
+  
+            () -> new WaitCommand(0.1).andThen(() -> setClawPipeWheelVelocity(0)).schedule()
+                //setClawPipeWheelVelocity(0);
+                //System.out.println("Ball is detected: ");
+        
 
         ).until(() -> m_canRange.getIsDetected().getValue());
 

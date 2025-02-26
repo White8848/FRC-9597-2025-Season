@@ -2,10 +2,12 @@ package frc.robot.Subsystems;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 
 import static edu.wpi.first.units.Units.Volts;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -16,11 +18,11 @@ public class DeepCage extends SubsystemBase {
     private final TalonFX m_intakeWheel = new TalonFX(14, "rio");
     private final TalonFX m_deepCagePitch = new TalonFX(15, "rio");
 
-    private final VelocityTorqueCurrentFOC m_intakeWheelVelocityRequest = new VelocityTorqueCurrentFOC(0.0)
+    private final MotionMagicVelocityVoltage m_intakeWheelVelocityRequest = new MotionMagicVelocityVoltage(0.0)
             .withSlot(0);
-    private final VelocityTorqueCurrentFOC m_deepCagePitchVelocityRequest = new VelocityTorqueCurrentFOC(0.0)
+    private final MotionMagicVelocityVoltage m_deepCagePitchVelocityRequest = new MotionMagicVelocityVoltage(0.0)
             .withSlot(0);
-    private final PositionTorqueCurrentFOC m_deepCagePitchPositionRequest = new PositionTorqueCurrentFOC(0.0)
+    private final MotionMagicVoltage m_deepCagePitchPositionRequest = new MotionMagicVoltage(0.0)
             .withSlot(1);
 
     //sysidoutine need voltageout mode
@@ -63,33 +65,46 @@ public class DeepCage extends SubsystemBase {
 
 
     public DeepCage() {
+        //IntakeWheel configs
         var intakeWheelConfigs = new TalonFXConfiguration();
 
-        intakeWheelConfigs.Slot0.kS = 0;
-        intakeWheelConfigs.Slot0.kV = 0;
+        intakeWheelConfigs.Slot0.kS = 0.48;
+        intakeWheelConfigs.Slot0.kV = 0.1;
         intakeWheelConfigs.Slot0.kA = 0;
-        intakeWheelConfigs.Slot0.kP = 0;
+        intakeWheelConfigs.Slot0.kP = 0.5;
         intakeWheelConfigs.Slot0.kI = 0;
         intakeWheelConfigs.Slot0.kD = 0;
 
+
+        // set Motion Magic Expo settings
+        intakeWheelConfigs.MotionMagic.MotionMagicAcceleration = 20; // Acceleration is around 40 rps/s
+        intakeWheelConfigs.MotionMagic.MotionMagicCruiseVelocity = 40; // Unlimited cruise velocity
+        intakeWheelConfigs.MotionMagic.MotionMagicExpo_kV = 0.12; // kV is around 0.12 V/rps
+        intakeWheelConfigs.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
+        intakeWheelConfigs.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0
+
         m_intakeWheel.getConfigurator().apply(intakeWheelConfigs);
 
+        //DeepCagePitch configs
         var deepCagePitchConfigs = new TalonFXConfiguration();
-        //Velocity Torque Current FOC
-        deepCagePitchConfigs.Slot0.kS = 0;
-        deepCagePitchConfigs.Slot0.kV = 0;
+
+        deepCagePitchConfigs.Slot0.kS = 0.5;
+        deepCagePitchConfigs.Slot0.kV = 0.5;
         deepCagePitchConfigs.Slot0.kA = 0;
-        deepCagePitchConfigs.Slot0.kP = 0;
+        deepCagePitchConfigs.Slot0.kP = 20;
         deepCagePitchConfigs.Slot0.kI = 0;
         deepCagePitchConfigs.Slot0.kD = 0;
-        //Position Torque Current FOC
-        deepCagePitchConfigs.Slot1.kS = 0;
-        deepCagePitchConfigs.Slot1.kV = 0;
-        deepCagePitchConfigs.Slot1.kA = 0;
-        deepCagePitchConfigs.Slot1.kP = 0;
-        deepCagePitchConfigs.Slot1.kI = 0;
-        deepCagePitchConfigs.Slot1.kD = 0;
+        deepCagePitchConfigs.Slot0.kG = 0.25;
+        deepCagePitchConfigs.Slot0.withGravityType(GravityTypeValue.Arm_Cosine);
 
+        // set Motion Magic Expo settings
+        deepCagePitchConfigs.MotionMagic.MotionMagicAcceleration = 20; // Acceleration is around 40 rps/s
+        deepCagePitchConfigs.MotionMagic.MotionMagicCruiseVelocity = 40; // Unlimited cruise velocity
+        deepCagePitchConfigs.MotionMagic.MotionMagicExpo_kV = 0.15; // kV is around 0.12 V/rps
+        deepCagePitchConfigs.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
+        deepCagePitchConfigs.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0
+
+     
         m_deepCagePitch.getConfigurator().apply(deepCagePitchConfigs);
     }
 
