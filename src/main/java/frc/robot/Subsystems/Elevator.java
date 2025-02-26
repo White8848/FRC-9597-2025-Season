@@ -145,7 +145,7 @@ public class Elevator extends SubsystemBase {
             }
             m_claw.setClawPitchPosition(clawPosition);
             if (m_state == State.INTAKE) {
-                while (Math.abs(m_claw.getClawPitchPosition() - clawPosition) < 0.1) {
+                while (Math.abs(m_claw.getClawPitchPosition() - clawPosition) < Constants.Claw.CLAW_PITCH_ACCEPT_ERROR) {
                     // Wait for the claw to reach the desired position
                 }
             }
@@ -190,7 +190,7 @@ public class Elevator extends SubsystemBase {
 
             setElevatorPosition(elevatorPosition);
             if(m_state == State.START) {
-                while (Math.abs(getElevatorPosition() - elevatorPosition) < 1) {
+                while (Math.abs(getElevatorPosition() - elevatorPosition) < Constants.Elevator.ELEVATOR_ACCEPT_ERROR) {
                     // Wait for the elevator to reach the desired position
                 }
             }
