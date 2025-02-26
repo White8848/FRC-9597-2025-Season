@@ -41,6 +41,7 @@ public class Elevator extends SubsystemBase {
             State[] states = State.values();
             return nextOrdinal < states.length ? states[nextOrdinal] : this; // 若已到最大值，则返回自身
         }
+
         public State previous() {
             int prevOrdinal = this.ordinal() - 1;
             return prevOrdinal >= 0 ? State.values()[prevOrdinal] : this; // 若已到最小值，则返回自身
@@ -143,9 +144,12 @@ public class Elevator extends SubsystemBase {
                     break;
             }
             m_claw.setClawPitchPosition(clawPosition);
-            while(Math.abs(m_claw.getClawPitchPosition() - clawPosition) < 0.1) {
-                // Wait for the claw to reach the desired position
+            if (m_state == State.INTAKE) {
+                while (Math.abs(m_claw.getClawPitchPosition() - clawPosition) < 0.1) {
+                    // Wait for the claw to reach the desired position
+                }
             }
+
             setElevatorPosition(elevatorPosition);
         });
     }
@@ -185,8 +189,10 @@ public class Elevator extends SubsystemBase {
             }
 
             setElevatorPosition(elevatorPosition);
-            while(Math.abs(getElevatorPosition() - elevatorPosition) < 1) {
-                // Wait for the elevator to reach the desired position
+            if(m_state == State.START) {
+                while (Math.abs(getElevatorPosition() - elevatorPosition) < 1) {
+                    // Wait for the elevator to reach the desired position
+                }
             }
             m_claw.setClawPitchPosition(clawPosition);
         });
