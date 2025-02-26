@@ -4,7 +4,6 @@ import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
@@ -91,15 +90,15 @@ public class DeepCage extends SubsystemBase {
         deepCagePitchConfigs.Slot0.kS = 0.5;
         deepCagePitchConfigs.Slot0.kV = 0.5;
         deepCagePitchConfigs.Slot0.kA = 0;
-        deepCagePitchConfigs.Slot0.kP = 20;
+        deepCagePitchConfigs.Slot0.kP = 30;
         deepCagePitchConfigs.Slot0.kI = 0;
         deepCagePitchConfigs.Slot0.kD = 0;
         deepCagePitchConfigs.Slot0.kG = 0.25;
         deepCagePitchConfigs.Slot0.withGravityType(GravityTypeValue.Arm_Cosine);
 
         // set Motion Magic Expo settings
-        deepCagePitchConfigs.MotionMagic.MotionMagicAcceleration = 20; // Acceleration is around 40 rps/s
-        deepCagePitchConfigs.MotionMagic.MotionMagicCruiseVelocity = 40; // Unlimited cruise velocity
+        deepCagePitchConfigs.MotionMagic.MotionMagicAcceleration = 100; // Acceleration is around 40 rps/s
+        deepCagePitchConfigs.MotionMagic.MotionMagicCruiseVelocity = 200; // Unlimited cruise velocity
         deepCagePitchConfigs.MotionMagic.MotionMagicExpo_kV = 0.15; // kV is around 0.12 V/rps
         deepCagePitchConfigs.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
         deepCagePitchConfigs.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0
