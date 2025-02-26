@@ -110,7 +110,7 @@ public class Elevator extends SubsystemBase {
     }
 
     public Command ElevatorClawUp() {
-        return run(() -> {
+        return runOnce(() -> {
             double elevatorPosition = getElevatorPosition();
             double clawPosition = m_claw.getClawPitchPosition();
 
@@ -151,7 +151,7 @@ public class Elevator extends SubsystemBase {
     }
 
     public Command ElevatorClawDown() {
-        return run(() -> {
+        return runOnce(() -> {
             double elevatorPosition = getElevatorPosition();
             double clawPosition = m_claw.getClawPitchPosition();
 
