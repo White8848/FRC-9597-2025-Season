@@ -13,10 +13,9 @@ import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-
 import frc.robot.Constants;
-import frc.robot.Subsystems.Claw;
 
 public class Elevator extends SubsystemBase {
 
@@ -33,22 +32,7 @@ public class Elevator extends SubsystemBase {
 
     private final Claw m_claw;
 
-    private enum State {
-        START, INTAKE, REEF_2, REEF_3, REEF_4, BARGE;
-
-        public State next() {
-            int nextOrdinal = this.ordinal() + 1;
-            State[] states = State.values();
-            return nextOrdinal < states.length ? states[nextOrdinal] : this; // 若已到最大值，则返回自身
-        }
-
-        public State previous() {
-            int prevOrdinal = this.ordinal() - 1;
-            return prevOrdinal >= 0 ? State.values()[prevOrdinal] : this; // 若已到最小值，则返回自身
-        }
-    };
-
-    private State m_state = State.START;
+    private  Constants.Elevator.State m_current_state = Constants.Elevator.State.START;//describe the current state of the elevator
 
     /*
      * SysId routine for characterizing clawpitch. This is used to find PID gains
@@ -109,15 +93,28 @@ public class Elevator extends SubsystemBase {
     public Command MoveToLevel(double position) {
         return run(() -> this.setElevatorPosition(position));
     }
-
-    public Command ElevatorClawUp() {
+    
+    //realese the evelator motor
+    public void releaseElevator() {
+        m_elevatorLeft.setControl(new VoltageOut(0.0));
+    }
+    
+    /**
+     * Adjusts the elevator and claw positions based on the desired state.
+     * Moves the claw and elevator sequentially, ensuring the proper order of operations 
+     * for each state transition, including special handling when transitioning to/from REEF_4.
+     *
+     * @param m_desired_state The target state for the elevator and claw.
+     * @return Command to execute the position adjustments.
+     */
+    public Command ElevatorClawUp(Constants.Elevator.State m_desired_state) {
+        System.out.println("start ElevatorClawUp");
         return runOnce(() -> {
+            System.out.println("start runOnce");
             double elevatorPosition = getElevatorPosition();
             double clawPosition = m_claw.getClawPitchPosition();
 
-            m_state = m_state.next();
-
-            switch (m_state) {
+            switch (m_desired_state) {
                 case START:
                     clawPosition = Constants.Claw.CLAW_PITCH_START;
                     elevatorPosition = Constants.Elevator.ELEVATOR_START;
@@ -138,63 +135,68 @@ public class Elevator extends SubsystemBase {
                     clawPosition = Constants.Claw.CLAW_PITCH_REEF_4;
                     elevatorPosition = Constants.Elevator.ELEVATOR_REEF_4;
                     break;
+                case GETBALL1:
+                    clawPosition = Constants.Claw.CLAW_PITCH_GETBALL;
+                    elevatorPosition = Constants.Elevator.ELEVATOR_GETBALL1;
+                    break;
+                case GETBALL2:
+                    clawPosition = Constants.Claw.CLAW_PITCH_GETBALL;
+                    elevatorPosition = Constants.Elevator.ELEVATOR_GETBALL2;
+                    break;
                 case BARGE:
                     clawPosition = Constants.Claw.CLAW_PITCH_BARGE;
                     elevatorPosition = Constants.Elevator.ELEVATOR_BARGE;
                     break;
             }
-            m_claw.setClawPitchPosition(clawPosition);
-            if (m_state == State.INTAKE) {
-                while (Math.abs(m_claw.getClawPitchPosition() - clawPosition) < Constants.Claw.CLAW_PITCH_ACCEPT_ERROR) {
+
+            //From any position to 4 or from 4 to any position
+            //First arrive at the unblocked position, then move the elevator, and then move the claw
+            if((m_desired_state == Constants.Elevator.State.REEF_4)||(m_current_state == Constants.Elevator.State.REEF_4)) {
+
+                m_claw.setClawPitchPosition(0.05);//move the claw slightly
+                while (Math.abs(m_claw.getClawPitchPosition() - clawPosition) > Constants.Claw.CLAW_PITCH_ACCEPT_ERROR) {
                     // Wait for the claw to reach the desired position
                 }
+                setElevatorPosition(elevatorPosition);//move the elevator
+                while (Math.abs(getElevatorPosition() - elevatorPosition) > Constants.Elevator.ELEVATOR_ACCEPT_ERROR) {
+                }
+                m_claw.setClawPitchPosition(clawPosition);//move the claw
+                
             }
-
-            setElevatorPosition(elevatorPosition);
-        });
-    }
-
-    public Command ElevatorClawDown() {
-        return runOnce(() -> {
-            double elevatorPosition = getElevatorPosition();
-            double clawPosition = m_claw.getClawPitchPosition();
-
-            m_state = m_state.previous();
-
-            switch (m_state) {
-                case START:
-                    clawPosition = Constants.Claw.CLAW_PITCH_START;
-                    elevatorPosition = Constants.Elevator.ELEVATOR_START;
-                    break;
-                case INTAKE:
-                    clawPosition = Constants.Claw.CLAW_PITCH_INTAKE;
-                    elevatorPosition = Constants.Elevator.ELEVATOR_INTAKE;
-                    break;
-                case REEF_2:
-                    clawPosition = Constants.Claw.CLAW_PITCH_REEF_2;
-                    elevatorPosition = Constants.Elevator.ELEVATOR_REEF_2;
-                    break;
-                case REEF_3:
-                    clawPosition = Constants.Claw.CLAW_PITCH_REEF_3;
-                    elevatorPosition = Constants.Elevator.ELEVATOR_REEF_3;
-                    break;
-                case REEF_4:
-                    clawPosition = Constants.Claw.CLAW_PITCH_REEF_4;
-                    elevatorPosition = Constants.Elevator.ELEVATOR_REEF_4;
-                    break;
-                case BARGE:
-                    clawPosition = Constants.Claw.CLAW_PITCH_BARGE;
-                    elevatorPosition = Constants.Elevator.ELEVATOR_BARGE;
-                    break;
-            }
-
-            setElevatorPosition(elevatorPosition);
-            if(m_state == State.START) {
-                while (Math.abs(getElevatorPosition() - elevatorPosition) < Constants.Elevator.ELEVATOR_ACCEPT_ERROR) {
+          
+            //Other positions to 0
+            //Move the elevator first, then move the claw
+            else if(m_desired_state == Constants.Elevator.State.START && m_current_state != Constants.Elevator.State.REEF_4) {
+                setElevatorPosition(elevatorPosition);//move the elevator
+                while (Math.abs(getElevatorPosition() - elevatorPosition) > Constants.Elevator.ELEVATOR_ACCEPT_ERROR) {
                     // Wait for the elevator to reach the desired position
                 }
+                m_claw.setClawPitchPosition(clawPosition);//move the claw
             }
-            m_claw.setClawPitchPosition(clawPosition);
+
+            //other circumstances
+            //First move the claw, then move the elevator
+            else {
+                m_claw.setClawPitchPosition(clawPosition);//move the claw
+                while (Math.abs(m_claw.getClawPitchPosition() - clawPosition) > Constants.Claw.CLAW_PITCH_ACCEPT_ERROR) {
+                    // Wait for the claw to reach the desired position
+                }
+                setElevatorPosition(elevatorPosition);//move the elevator
+            }
+
+            m_current_state = m_desired_state;//update the current state of the elevator for the next move
+
+            System.out.println("Current State: " + m_current_state);
+            
+            // Release the motor
+            if (m_current_state == Constants.Elevator.State.START) {
+                new WaitCommand(1.0).andThen(() -> {
+                    releaseElevator();   // Release the elevator motor
+                    m_claw.releaseClawPitch();  // Release the claw pitch motor
+                }).schedule();
+        }
+
+
         });
     }
 
@@ -221,3 +223,6 @@ public class Elevator extends SubsystemBase {
     }
 
 }
+
+
+

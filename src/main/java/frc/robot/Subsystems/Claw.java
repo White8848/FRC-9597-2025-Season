@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Constants;
 
 public class Claw extends SubsystemBase {
     private final TalonFX m_clawPitch = new TalonFX(9, "canivore");
@@ -29,9 +30,16 @@ public class Claw extends SubsystemBase {
     private final CANcoder m_clawPitchEncoder = new CANcoder(5, "canivore");
     private final CANrange m_canRange = new CANrange(1, "canivore");
 
+    
     // set control mode for each motor
     private final MotionMagicVoltage m_clawPitchPositionRequest = new MotionMagicVoltage(0.0)
             .withSlot(0);
+    // private final MotionMagicVoltage m_clawPipeWheelPositionRequest = new MotionMagicVoltage(0.0)
+    //         .withSlot(0);
+    // private final MotionMagicVoltage m_clawWheelPositionRequest = new MotionMagicVoltage(0.0)
+    //         .withSlot(0);    
+            
+            
     private final VelocityTorqueCurrentFOC m_clawPipeWheelVelocityRequest = new VelocityTorqueCurrentFOC(0.0)
             .withSlot(0);
     private final VelocityTorqueCurrentFOC m_clawWheelVelocityRequest = new VelocityTorqueCurrentFOC(0.0)
@@ -108,13 +116,18 @@ public class Claw extends SubsystemBase {
 
         // claw pipe wheel configs
         var clawPipeWheelConfigs = new TalonFXConfiguration();
-
+        
         clawPipeWheelConfigs.Slot0.kS = 4.7;
         clawPipeWheelConfigs.Slot0.kV = 0.09;
         clawPipeWheelConfigs.Slot0.kA = 0;
-        clawPipeWheelConfigs.Slot0.kP = 5;
+        clawPipeWheelConfigs.Slot0.kP = 6;
         clawPipeWheelConfigs.Slot0.kI = 0;
         clawPipeWheelConfigs.Slot0.kD = 0.25;
+        clawPipeWheelConfigs.MotionMagic.MotionMagicAcceleration = 20; // Acceleration is around 40 rps/s
+        clawPipeWheelConfigs.MotionMagic.MotionMagicCruiseVelocity = 40; // Unlimited cruise velocity
+        clawPipeWheelConfigs.MotionMagic.MotionMagicExpo_kV = 0.12; // kV is around 0.12 V/rps
+        clawPipeWheelConfigs.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
+        clawPipeWheelConfigs.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0
 
         m_clawPipeWheel.getConfigurator().apply(clawPipeWheelConfigs);
 
@@ -127,6 +140,12 @@ public class Claw extends SubsystemBase {
         clawWheelConfigs.Slot0.kP = 5;
         clawWheelConfigs.Slot0.kI = 0;
         clawWheelConfigs.Slot0.kD = 0;
+        clawWheelConfigs.MotionMagic.MotionMagicAcceleration = 20; // Acceleration is around 40 rps/s
+        clawWheelConfigs.MotionMagic.MotionMagicCruiseVelocity = 40; // Unlimited cruise velocity
+        clawWheelConfigs.MotionMagic.MotionMagicExpo_kV = 0.12; // kV is around 0.12 V/rps
+        clawWheelConfigs.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
+        clawWheelConfigs.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0
+
 
         m_clawWheel.getConfigurator().apply(clawWheelConfigs);
 
@@ -159,6 +178,7 @@ public class Claw extends SubsystemBase {
         // set CANrange configs as default
         m_canRange.getConfigurator().apply(new CANrangeConfiguration());
 
+
     }
 
     /**
@@ -169,7 +189,6 @@ public class Claw extends SubsystemBase {
     public void setClawPitchPosition(double position) {
         m_clawPitch.setControl(m_clawPitchPositionRequest.withPosition(position));
     }
-
     /**
      * Sets the claw pipe wheel velocity.
      * 
@@ -197,6 +216,11 @@ public class Claw extends SubsystemBase {
         return m_clawPitchEncoder.getPosition().getValueAsDouble();
     }
 
+    //realese the evelator motor
+    public void releaseClawPitch() {
+        m_clawPitch.setControl(new VoltageOut(0.0));
+    }
+
     /**
      * Runs the claw wheel intake.
      * 
@@ -208,7 +232,7 @@ public class Claw extends SubsystemBase {
         return runEnd(
             () ->   { if(!m_canRange.getIsDetected().getValue())
                         {
-                            setClawPipeWheelVelocity(-20.0);
+                            setClawPipeWheelVelocity(Constants.Claw.GET_REFF_SPEED);
                         }
                     },
   
@@ -229,7 +253,7 @@ public class Claw extends SubsystemBase {
     public Command clawWheelOuttake() {
 
         return startEnd(
-                () -> setClawPipeWheelVelocity(-25.0),
+                () -> setClawPipeWheelVelocity(Constants.Claw.SHOOT_REFF_SPEED),
 
                 () -> setClawPipeWheelVelocity(0)
 
@@ -244,12 +268,13 @@ public class Claw extends SubsystemBase {
      */
     public Command getBall() {
         return runEnd(() -> {
-            setClawPipeWheelVelocity(0.0);
-            setClawWheelVelocity(0.0);
+            System.out.println("getBall");
+            setClawPipeWheelVelocity(Constants.Claw.GET_BALL_PIPEWHEEL_SPEED);
+            setClawWheelVelocity(Constants.Claw.GET_BALL_WHEEL_SPEED);
         },
                 () -> {
-                    setClawPipeWheelVelocity(0.0);
-                    setClawWheelVelocity(0.0);
+                    setClawPipeWheelVelocity(Constants.Claw.HOLD_BALL_PIPEWHEEL_SPEED);
+                    setClawWheelVelocity(Constants.Claw.HOLD_BALL_WHEEL_SPEED);
                 });
     }
 
@@ -260,8 +285,8 @@ public class Claw extends SubsystemBase {
      */
     public Command shootBall() {
         return runEnd(() -> {
-            setClawPipeWheelVelocity(0.0);
-            setClawWheelVelocity(0.0);
+            setClawPipeWheelVelocity(Constants.Claw.SHOOT__BALL_PIPEWHEEL_SPEED);
+            setClawWheelVelocity(Constants.Claw.SHOOT__BALL_WHEEL_SPEED);
         },
                 () -> {
                     setClawPipeWheelVelocity(0.0);
