@@ -107,7 +107,7 @@ public class Elevator extends SubsystemBase {
      * @param m_desired_state The target state for the elevator and claw.
      * @return Command to execute the position adjustments.
      */
-    public Command ElevatorClawUp(Constants.Elevator.State m_desired_state) {
+    public Command ElevatorClawMove(Constants.Elevator.State m_desired_state) {
         System.out.println("start ElevatorClawUp");
         return runOnce(() -> {
             System.out.println("start runOnce");

@@ -93,21 +93,21 @@ public class RobotContainer {
         drivetrain.registerTelemetry(logger::telemeterize);
 
         //intake
-        m_driverJoystick.leftBumper().onTrue(elevator.ElevatorClawUp(Constants.Elevator.State.INTAKE));
+        m_driverJoystick.leftBumper().onTrue(elevator.ElevatorClawMove(Constants.Elevator.State.INTAKE));
         //reef2
-        m_driverJoystick.rightBumper().onTrue(elevator.ElevatorClawUp(Constants.Elevator.State.REEF_2));
+        m_driverJoystick.rightBumper().onTrue(elevator.ElevatorClawMove(Constants.Elevator.State.REEF_2));
         //reef3
-        m_driverJoystick.leftTrigger().onTrue(elevator.ElevatorClawUp(Constants.Elevator.State.REEF_3));
+        m_driverJoystick.leftTrigger().onTrue(elevator.ElevatorClawMove(Constants.Elevator.State.REEF_3));
         //reef4
-        m_driverJoystick.rightTrigger().onTrue(elevator.ElevatorClawUp(Constants.Elevator.State.REEF_4));
+        m_driverJoystick.rightTrigger().onTrue(elevator.ElevatorClawMove(Constants.Elevator.State.REEF_4));
 
         //get ball position 1
-        m_driverJoystick.a().whileTrue(elevator.ElevatorClawUp(Constants.Elevator.State.GETBALL1).andThen(claw.getBall()));
+        m_driverJoystick.a().whileTrue(elevator.ElevatorClawMove(Constants.Elevator.State.GETBALL1).andThen(claw.getBall()));
         
         //get ball position 2
-        m_driverJoystick.b().whileTrue(elevator.ElevatorClawUp(Constants.Elevator.State.GETBALL2).andThen(claw.getBall()));
+        m_driverJoystick.b().whileTrue(elevator.ElevatorClawMove(Constants.Elevator.State.GETBALL2).andThen(claw.getBall()));
                                         
-        m_driverJoystick.y().onTrue(elevator.ElevatorClawUp(Constants.Elevator.State.BARGE));
+        m_driverJoystick.y().onTrue(elevator.ElevatorClawMove(Constants.Elevator.State.BARGE));
 
 
         //************************************************************ (operator) ********************************************************
@@ -118,7 +118,7 @@ public class RobotContainer {
         //shoot ball
         m_operatorJoystick.rightBumper().whileTrue(claw.shootBall());
         //back to start
-        m_operatorJoystick.x().onTrue(elevator.ElevatorClawUp(Constants.Elevator.State.START));
+        m_operatorJoystick.x().onTrue(elevator.ElevatorClawMove(Constants.Elevator.State.START));
 
         //************************************************************ DEEPCAGE(operator) ****************************************************
 
