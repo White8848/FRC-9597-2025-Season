@@ -6,22 +6,21 @@ package frc.robot;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-
-import edu.wpi.first.math.geometry.Rotation2d;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.RunCommand;
+import frc.robot.Subsystems.CANdleSystem;
 import frc.robot.Subsystems.Claw;
 import frc.robot.Subsystems.CommandSwerveDrivetrain;
 import frc.robot.Subsystems.DeepCage;
 import frc.robot.Subsystems.Elevator;
 import frc.robot.generated.TunerConstants;
-import frc.robot.Constants;
 
 //import frc.robot.Commands.Getballcommand;
 
@@ -61,7 +60,10 @@ public class RobotContainer {
 
     public final Elevator elevator = new Elevator();
 
+    public final CANdleSystem candle = new CANdleSystem(elevator);
+    
     public final Claw claw = new Claw();
+
 
 
     public RobotContainer() {
@@ -70,7 +72,7 @@ public class RobotContainer {
 
     private void configureBindings() {
         //************************************************************ (driver) *******************************************************
-        
+
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
         drivetrain.setDefaultCommand(
@@ -88,43 +90,62 @@ public class RobotContainer {
         // ));
 
         // reset the field-centric heading on left bumper press
-        m_driverJoystick.back().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
-
         drivetrain.registerTelemetry(logger::telemeterize);
 
-        //intake
-        m_driverJoystick.leftBumper().onTrue(elevator.ElevatorClawMove(Constants.Elevator.State.INTAKE));
-        //reef2
-        m_driverJoystick.rightBumper().onTrue(elevator.ElevatorClawMove(Constants.Elevator.State.REEF_2));
-        //reef3
-        m_driverJoystick.leftTrigger().onTrue(elevator.ElevatorClawMove(Constants.Elevator.State.REEF_3));
-        //reef4
-        m_driverJoystick.rightTrigger().onTrue(elevator.ElevatorClawMove(Constants.Elevator.State.REEF_4));
+        //set the direction of heading
+        m_driverJoystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
-        //get ball position 1
-        m_driverJoystick.a().whileTrue(elevator.ElevatorClawMove(Constants.Elevator.State.GETBALL1).andThen(claw.getBall()));
-        
-        //get ball position 2
-        m_driverJoystick.b().whileTrue(elevator.ElevatorClawMove(Constants.Elevator.State.GETBALL2).andThen(claw.getBall()));
-                                        
-        m_driverJoystick.y().onTrue(elevator.ElevatorClawMove(Constants.Elevator.State.BARGE));
+        //press the button to change the color state to showoff
+        m_driverJoystick.a().onTrue(new RunCommand(candle::incrementAnimation, candle));
+
+        //intake reef
+        m_driverJoystick.rightBumper().whileTrue(claw.clawWheelIntake());
+        //shoot reef
+        m_driverJoystick.rightTrigger().whileTrue(claw.clawWheelOuttake());
+
+        // //************************************************************ DEEPCAGE(operator) ****************************************************
+        //m_driverJoystick.leftTrigger().whileTrue(deepcage.intakeBall());
+        //m_driverJoystick.rightTrigger().whileTrue(deepcage.ejectBall());
 
 
         //************************************************************ (operator) ********************************************************
-        //intake reef
-        m_operatorJoystick.back().whileTrue(claw.clawWheelIntake());
-        //shoot reef
-        m_operatorJoystick.start().whileTrue(claw.clawWheelOuttake());
-        //shoot ball
-        m_operatorJoystick.rightBumper().whileTrue(claw.shootBall());
         //back to start
-        m_operatorJoystick.x().onTrue(elevator.ElevatorClawMove(Constants.Elevator.State.START));
+        m_operatorJoystick.x().onTrue(elevator.ElevatorClawMove(Constants.Elevator.State.START)
+                                    .andThen((new InstantCommand(() -> candle.Changecolor(Constants.Elevator.State.START), candle))));
+        //reef2
+        m_operatorJoystick.povLeft().onTrue(elevator.ElevatorClawMove(Constants.Elevator.State.REEF_2)
+                                    .andThen((new InstantCommand(() -> candle.Changecolor(Constants.Elevator.State.REEF_2), candle))));
+        //reef3
+        m_operatorJoystick.povRight().onTrue(elevator.ElevatorClawMove(Constants.Elevator.State.REEF_3)
+                                    .andThen((new InstantCommand(() -> candle.Changecolor(Constants.Elevator.State.REEF_3), candle))));
+        //reef4
+        m_operatorJoystick.povUp().onTrue(elevator.ElevatorClawMove(Constants.Elevator.State.REEF_4)
+                                    .andThen((new InstantCommand(() -> candle.Changecolor(Constants.Elevator.State.REEF_4), candle))));
+        //get ball position 1
+   
+        m_operatorJoystick.a().whileTrue(
+                                    Commands.parallel(
+                                        elevator.ElevatorClawMove(Constants.Elevator.State.GETBALL1), // 让电梯和爪子运动
+                                        claw.getBall() // 获取球的命令                                  
+                                    ).andThen(new InstantCommand(() -> candle.Changecolor(Constants.Elevator.State.GETBALL1), candle))); // 颜色变化
+        //get ball position 2
+        m_operatorJoystick.y().whileTrue(
+                                    Commands.parallel(
+                                        elevator.ElevatorClawMove(Constants.Elevator.State.GETBALL2), // 让电梯和爪子运动
+                                        claw.getBall() // 获取球的命令   
+                                    ).andThen(new InstantCommand(() -> candle.Changecolor(Constants.Elevator.State.GETBALL2), candle))); // 颜色变化
 
-        //************************************************************ DEEPCAGE(operator) ****************************************************
+        //barge                              
+        m_operatorJoystick.b().onTrue(elevator.ElevatorClawMove(Constants.Elevator.State.BARGE)
+                                    .andThen((new InstantCommand(() -> candle.Changecolor(Constants.Elevator.State.BARGE), candle))));
+        //shoot ball
+        m_operatorJoystick.rightTrigger().whileTrue(claw.shootBall());
 
 
 
-
+        // //************************************************************ DEEPCAGE(operator) ****************************************************
+        // m_operatorJoystick.leftTrigger().whileTrue(deepcage.deepCagePitchUp());
+        // m_operatorJoystick.rightTrigger().whileTrue(deepcage.deepCagePitchDown());
 
 
         // //********************************************************** Sysidroutine ******************************************************

@@ -12,6 +12,7 @@ import static edu.wpi.first.units.Units.Volts;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Constants;
 
 public class DeepCage extends SubsystemBase {
     private final TalonFX m_intakeWheel = new TalonFX(14, "rio");
@@ -22,7 +23,7 @@ public class DeepCage extends SubsystemBase {
     private final MotionMagicVelocityVoltage m_deepCagePitchVelocityRequest = new MotionMagicVelocityVoltage(0.0)
             .withSlot(0);
     private final MotionMagicVoltage m_deepCagePitchPositionRequest = new MotionMagicVoltage(0.0)
-            .withSlot(1);
+            .withSlot(0);
 
     //sysidoutine need voltageout mode
     private final VoltageOut m_intakeWheelVoltageRequest_sysid = new VoltageOut(0.0);
@@ -67,17 +68,17 @@ public class DeepCage extends SubsystemBase {
         //IntakeWheel configs
         var intakeWheelConfigs = new TalonFXConfiguration();
 
-        intakeWheelConfigs.Slot0.kS = 0.48;
-        intakeWheelConfigs.Slot0.kV = 0.1;
+        intakeWheelConfigs.Slot0.kS = 0.2;
+        intakeWheelConfigs.Slot0.kV = 0.2;
         intakeWheelConfigs.Slot0.kA = 0;
-        intakeWheelConfigs.Slot0.kP = 0.5;
+        intakeWheelConfigs.Slot0.kP = 0.3;
         intakeWheelConfigs.Slot0.kI = 0;
         intakeWheelConfigs.Slot0.kD = 0;
 
 
         // set Motion Magic Expo settings
-        intakeWheelConfigs.MotionMagic.MotionMagicAcceleration = 20; // Acceleration is around 40 rps/s
-        intakeWheelConfigs.MotionMagic.MotionMagicCruiseVelocity = 40; // Unlimited cruise velocity
+        intakeWheelConfigs.MotionMagic.MotionMagicAcceleration = 250; // Acceleration is around 40 rps/s
+        intakeWheelConfigs.MotionMagic.MotionMagicCruiseVelocity = 500; // Unlimited cruise velocity
         intakeWheelConfigs.MotionMagic.MotionMagicExpo_kV = 0.12; // kV is around 0.12 V/rps
         intakeWheelConfigs.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
         intakeWheelConfigs.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0
@@ -87,13 +88,13 @@ public class DeepCage extends SubsystemBase {
         //DeepCagePitch configs
         var deepCagePitchConfigs = new TalonFXConfiguration();
 
-        deepCagePitchConfigs.Slot0.kS = 0.5;
-        deepCagePitchConfigs.Slot0.kV = 0.5;
+        deepCagePitchConfigs.Slot0.kS = 0.2;
+        deepCagePitchConfigs.Slot0.kV = 0.1;
         deepCagePitchConfigs.Slot0.kA = 0;
-        deepCagePitchConfigs.Slot0.kP = 30;
+        deepCagePitchConfigs.Slot0.kP = 0.2;
         deepCagePitchConfigs.Slot0.kI = 0;
         deepCagePitchConfigs.Slot0.kD = 0;
-        deepCagePitchConfigs.Slot0.kG = 0.25;
+        deepCagePitchConfigs.Slot0.kG = 0;
         deepCagePitchConfigs.Slot0.withGravityType(GravityTypeValue.Arm_Cosine);
 
         // set Motion Magic Expo settings
@@ -134,25 +135,40 @@ public class DeepCage extends SubsystemBase {
         m_deepCagePitch.setControl(m_deepCagePitchPositionRequest.withPosition(position));
     }
 
+    // /**
+    //  * Sets the deep cage pitch position
+    //  * 
+    //  * @param position
+    //  */
+    // public void setDeepCagePitchPosition(double position) {
+    //     m_deepCagePitch.setControl(m_deepCagePitchPositionRequest.withPosition(position));
+    // }
+
+
+
     public Command intakeBall() {
         return runEnd(() -> {
-            setIntakeWheelVelocity(0.5);
+            setDeepCagePitchPosition(Constants.DEEPCAGE.INTAKE_BALL_POSITION1);
+            setIntakeWheelVelocity(Constants.DEEPCAGE.INTAKE_BALL_SPEED);
         }, () -> {
-            setIntakeWheelVelocity(0);
+            setIntakeWheelVelocity(Constants.DEEPCAGE.HOLD_BALL_SPEED);//hold ball
+
+            setDeepCagePitchPosition(Constants.DEEPCAGE.INTAKE_BALL_POSITION2);
         });
     }
 
     public Command ejectBall() {
         return runEnd(() -> {
-            setIntakeWheelVelocity(-0.5);
+            setIntakeWheelVelocity(Constants.DEEPCAGE.EJECT_BALL_SPEED);
         }, () -> {
             setIntakeWheelVelocity(0);
+            setDeepCagePitchPosition(0);
         });
     }
 
     public Command deepCagePitchUp() {
         return runEnd(() -> {
-            setDeepCagePitchVelocity(0.5);
+            setDeepCagePitchVelocity(Constants.DEEPCAGE.PITCH_UP_SPEED);
         }, () -> {
             setDeepCagePitchVelocity(0);
             double currentPosition = m_deepCagePitch.getPosition().getValueAsDouble();
@@ -162,7 +178,7 @@ public class DeepCage extends SubsystemBase {
 
     public Command deepCagePitchDown() {
         return runEnd(() -> {
-            setDeepCagePitchVelocity(-0.5);
+            setDeepCagePitchVelocity(Constants.DEEPCAGE.PITCH_DOWN_SPEED);
         }, () -> {
             setDeepCagePitchVelocity(0);
             double currentPosition = m_deepCagePitch.getPosition().getValueAsDouble();

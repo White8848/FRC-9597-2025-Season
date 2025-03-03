@@ -11,6 +11,9 @@ import com.ctre.phoenix6.signals.InvertedValue;
 
 import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
+
+import java.util.Set;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
@@ -31,13 +34,16 @@ public class Elevator extends SubsystemBase {
     private final VoltageOut m_elevator_rightVoltageRequest_sysid = new VoltageOut(0.0);
 
     private final Claw m_claw;
+    //private final CANdleSystem m_candleSystem;
 
-    private Constants.Elevator.State m_current_state = Constants.Elevator.State.START;// describe the current state of
+    public Constants.Elevator.State m_current_state = Constants.Elevator.State.START;// describe the current state of
                                                                                       // the elevator
 
     private boolean m_elevatorClawIsMoving = false;// describe the elevator is moving or not
     private double m_elevatorPosition = 0.0;// describe the elevator position
     private double m_clawPosition = 0.0;// describe the claw position
+
+    private boolean is_avoided=false;
 
     /*
      * SysId routine for characterizing clawpitch. This is used to find PID gains
@@ -85,6 +91,7 @@ public class Elevator extends SubsystemBase {
         m_elevatorRight.setControl(new Follower(m_elevatorLeft.getDeviceID(), false));
 
         m_claw = new Claw();
+        //m_candleSystem = new CANdleSystem();
 
         m_elevatorPosition = getM_elevatorPosition();
         m_clawPosition = m_claw.getClawPitchPosition();
@@ -107,20 +114,35 @@ public class Elevator extends SubsystemBase {
         m_elevatorLeft.setControl(new VoltageOut(0.0));
     }
 
+    public Constants.Elevator.State getCurrentState() {
+        return m_current_state;
+    }
+
+    public Command ShallowCage() {
+        return startEnd(
+            () -> {
+                setElevatorPosition(Constants.Elevator.ELEVATOR_ShALLOWCAGE_UP);
+                }, 
+            () -> {
+                setElevatorPosition(Constants.Elevator.ELEVATOR_ShALLOWCAGE_DOWN);
+            }).until(() -> {
+                // Check if the elevator and claw have reached their target positions
+                return (Math.abs(getM_elevatorPosition() - m_elevatorPosition) < Constants.Elevator.ELEVATOR_ACCEPT_ERROR);
+            });
+    }
+    
     /**
      * Adjusts the elevator and claw positions based on the desired state.
      * Moves the claw and elevator sequentially, ensuring the proper order of
      * operations
      * for each state transition, including special handling when transitioning
-     * to/from REEF_4.
-     *
      * @param m_desired_state The target state for the elevator and claw.
      * @return Command to execute the position adjustments.
      */
     public Command ElevatorClawMove(Constants.Elevator.State m_desired_state) {
-        System.out.println("start ElevatorClawMove");
+        //System.out.println("start ElevatorClawMove");
         return run(() -> {
-            System.out.println("start run");
+            //System.out.println("start run");
             if (m_elevatorClawIsMoving == false) {
                 m_elevatorPosition = getM_elevatorPosition();
                 m_clawPosition = m_claw.getClawPitchPosition();
@@ -131,10 +153,6 @@ public class Elevator extends SubsystemBase {
                 case START:
                     m_clawPosition = Constants.Claw.CLAW_PITCH_START;
                     m_elevatorPosition = Constants.Elevator.ELEVATOR_START;
-                    break;
-                case INTAKE:
-                    m_clawPosition = Constants.Claw.CLAW_PITCH_INTAKE;
-                    m_elevatorPosition = Constants.Elevator.ELEVATOR_INTAKE;
                     break;
                 case REEF_2:
                     m_clawPosition = Constants.Claw.CLAW_PITCH_REEF_2;
@@ -161,25 +179,57 @@ public class Elevator extends SubsystemBase {
                     m_elevatorPosition = Constants.Elevator.ELEVATOR_BARGE;
                     break;
             }
-
-            // From any position to 4 or from 4 to any position
-            // First arrive at the unblocked position, then move the elevator, and then move
-            // the claw
+            
+            // Set START, REEF_2, REEF_3, REEF_4, GETBALL1, GETBALL2, BARGE to  state1,state2,state3,state4,state5,state6,state7 
+            // And set the movement sequence and positions of the elevator and claw for different states.
+            // And describe the switch between any two states in the form of an array.
+            
+            //Siutuation One: (1,4), (2,4), (3,4), (5,4), (6,4), (7,4), (4,1), (4,2), (4,3), (4,5), (4,6), (4,7)
             if ((m_desired_state == Constants.Elevator.State.REEF_4)
                     || (m_current_state == Constants.Elevator.State.REEF_4)) {
-                m_claw.setClawPitchPosition(0.05);// move the claw avoid collision
-                if (Math.abs(m_claw.getClawPitchPosition() - m_clawPosition) < Constants.Claw.CLAW_PITCH_ACCEPT_ERROR) {
-                    // Wait for the claw to reach the desired position
+                //during the command, the elevator and claw have not reached the avoid position
+                if(!is_avoided){
+                    m_claw.setClawPitchPosition(Constants.Claw.CLAW_PITCH_AVOID_COLLISION1);// move the claw avoid collision
+                }
+
+                if (Math.abs(m_claw.getClawPitchPosition() - Constants.Claw.CLAW_PITCH_AVOID_COLLISION1) < Constants.Claw.CLAW_PITCH_ACCEPT_ERROR) {
+                    //reach the avoid position
+                    is_avoided=true;
                     setElevatorPosition(m_elevatorPosition);// move the elevator
-                } else if (Math
-                        .abs(getM_elevatorPosition() - m_elevatorPosition) < Constants.Elevator.ELEVATOR_ACCEPT_ERROR) {
+                    //System.out.println("elevator error "+(Math.abs(getM_elevatorPosition() - m_elevatorPosition)));
+
+                } 
+
+                if (Math.abs(getM_elevatorPosition() - m_elevatorPosition) < Constants.Elevator.ELEVATOR_ACCEPT_ERROR) {
                     m_claw.setClawPitchPosition(m_clawPosition);// move the claw
+                    //System.out.println("calw error "+(Math.abs(m_claw.getClawPitchPosition() - m_clawPosition)));
                 }
 
             }
 
-            // Other positions to 0
-            // Move the elevator first, then move the claw
+            //Situation Two: (5,1), (6,1), (7,1)
+            else if((m_desired_state==Constants.Elevator.State.START && m_current_state== Constants.Elevator.State.BARGE)||
+            (m_desired_state==Constants.Elevator.State.START && m_current_state== Constants.Elevator.State.GETBALL1)||
+            (m_desired_state==Constants.Elevator.State.START && m_current_state== Constants.Elevator.State.GETBALL2)){
+
+                if(!is_avoided){
+                    m_claw.setClawPitchPosition(Constants.Claw.CLAW_PITCH_AVOID_COLLISION1);// move the claw avoid collision
+                }
+
+                if (Math.abs(m_claw.getClawPitchPosition() - Constants.Claw.CLAW_PITCH_AVOID_COLLISION1) < Constants.Claw.CLAW_PITCH_ACCEPT_ERROR) {
+                    //reach the avoid position
+                    is_avoided=true;
+                    setElevatorPosition(m_elevatorPosition);// move the elevator
+                    //System.out.println("elevator error "+(Math.abs(getM_elevatorPosition() - m_elevatorPosition)));
+                } 
+
+                if (Math.abs(getM_elevatorPosition() - m_elevatorPosition) < Constants.Elevator.ELEVATOR_ACCEPT_ERROR) {
+                    m_claw.setClawPitchPosition(m_clawPosition);// move the claw
+                    //System.out.println("calw error "+(Math.abs(m_claw.getClawPitchPosition() - m_clawPosition)));
+                }
+            }
+
+            //Situation Three: (2,1), (3,1)
             else if (m_desired_state == Constants.Elevator.State.START
                     && m_current_state != Constants.Elevator.State.REEF_4) {
                 setElevatorPosition(m_elevatorPosition);// move the elevator
@@ -189,14 +239,33 @@ public class Elevator extends SubsystemBase {
                 }
             }
 
-            // other circumstances
-            // Move claw and elevator at the same time
-            else {
-                m_claw.setClawPitchPosition(m_clawPosition);// move the claw
-                setElevatorPosition(m_elevatorPosition);// move the elevator
+            //Situation Four: (1,2), (1,3), 
+            else if ((m_desired_state == Constants.Elevator.State.REEF_2 || m_desired_state==Constants.Elevator.State.REEF_3)
+                     && (m_current_state == Constants.Elevator.State.START)){
+                
+                if(!is_avoided){
+                    m_claw.setClawPitchPosition(Constants.Claw.CLAW_PITCH_AVOID_COLLISION1);// move the claw avoid collision
+                }
 
+                if (Math.abs(m_claw.getClawPitchPosition() - Constants.Claw.CLAW_PITCH_AVOID_COLLISION1) < Constants.Claw.CLAW_PITCH_ACCEPT_ERROR) {
+                    //reach the avoid position
+                    is_avoided=true;
+                    setElevatorPosition(m_elevatorPosition);// move the elevator
+
+                    if (Math.abs(getM_elevatorPosition() - m_elevatorPosition) < Constants.Elevator.ELEVATOR_ACCEPT_ERROR) {
+                        // Wait for the elevator to reach the desired position
+                        m_claw.setClawPitchPosition(m_clawPosition);// move the claw
+                    }
+                } 
             }
-
+            //Situation Five: (1,5), (1,6), (1,7), (2,3), (2,5), (2,6), (2,7)
+                            //(3,2), (3,5), (3,6), (3,7), (5,2), (5,3), (5,6), (5,7)
+                            //(6,2), (6,3), (6,5), (6,7), (7,2), (7,3), (7,5), (7,6)
+            else {
+                m_claw.setClawPitchPosition(m_clawPosition);//move the claw
+    
+                setElevatorPosition(m_elevatorPosition);//move the elevator
+            }
         }).until(() -> {
             // Check if the elevator and claw have reached their target positions
             return (Math.abs(getM_elevatorPosition() - m_elevatorPosition) < Constants.Elevator.ELEVATOR_ACCEPT_ERROR
@@ -204,10 +273,11 @@ public class Elevator extends SubsystemBase {
                     Math.abs(m_claw.getClawPitchPosition() - m_clawPosition) < Constants.Claw.CLAW_PITCH_ACCEPT_ERROR);
         }).andThen(() -> {
             // Set the moving flag to false after the move is complete
+            is_avoided=false;//reset the avoid flag
             m_elevatorClawIsMoving = false;
             m_current_state = m_desired_state;// update the current state of the elevator for the next move
+            System.out.println("current state: " + m_current_state);
             System.out.println("Elevator and claw have reached their target positions.");
-            System.out.println("Current State: " + m_current_state);
             // Release the motor
             if (m_current_state == Constants.Elevator.State.START) {
                 new WaitCommand(1.0).andThen(() -> {
