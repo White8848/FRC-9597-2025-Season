@@ -5,7 +5,6 @@ import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CANrangeConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
@@ -36,22 +35,19 @@ public class Claw extends SubsystemBase {
     // set control mode for each motor
     private final MotionMagicVoltage m_clawPitchPositionRequest = new MotionMagicVoltage(0.0)
             .withSlot(0);
-    // private final MotionMagicVoltage m_clawPipeWheelPositionRequest = new MotionMagicVoltage(0.0)
-    //         .withSlot(0);
-    // private final MotionMagicVoltage m_clawWheelPositionRequest = new MotionMagicVoltage(0.0)
-    //         .withSlot(0);    
+     
             
-            
-    // private final VelocityTorqueCurrentFOC m_clawPipeWheelVelocityRequest = new VelocityTorqueCurrentFOC(0.0)
-    //         .withSlot(0);
-    // private final VelocityTorqueCurrentFOC m_clawWheelVelocityRequest = new VelocityTorqueCurrentFOC(0.0)
-    //         .withSlot(0);
+    private final VelocityTorqueCurrentFOC m_clawPipeWheelVelocityRequest = new VelocityTorqueCurrentFOC(0.0)
+            .withSlot(0);
+    private final VelocityTorqueCurrentFOC m_clawWheelVelocityRequest = new VelocityTorqueCurrentFOC(0.0)
+            .withSlot(0);
 
                         
-    private final MotionMagicVelocityVoltage m_clawPipeWheelVelocityRequest = new MotionMagicVelocityVoltage(0.0)
-        .withSlot(0);
-    private final MotionMagicVelocityVoltage m_clawWheelVelocityRequest = new MotionMagicVelocityVoltage(0.0)
-        .withSlot(0);
+    // private final MotionMagicVelocityVoltage m_clawPipeWheelVelocityRequest = new MotionMagicVelocityVoltage(0.0)
+    //     .withSlot(0);
+    // private final MotionMagicVelocityVoltage m_clawWheelVelocityRequest = new MotionMagicVelocityVoltage(0.0)
+    //     .withSlot(0);
+
 
     private int m_clawPitchPositionFlag = 0;
 
@@ -124,59 +120,59 @@ public class Claw extends SubsystemBase {
 
         // claw pipe wheel configs
         var clawPipeWheelConfigs = new TalonFXConfiguration();
-        //clawPipeWheelConfigs.TorqueCurrent.
-        // clawPipeWheelConfigs.Slot0.kS = 4.7;
-        // clawPipeWheelConfigs.Slot0.kV = 0.09;
-        // clawPipeWheelConfigs.Slot0.kA = 0;
-        // clawPipeWheelConfigs.Slot0.kP = 5;
-        // clawPipeWheelConfigs.Slot0.kI = 0;
-        // clawPipeWheelConfigs.Slot0.kD = 0.25;
-        // clawPipeWheelConfigs.MotionMagic.MotionMagicAcceleration = 20; // Acceleration is around 40 rps/s
-        // clawPipeWheelConfigs.MotionMagic.MotionMagicCruiseVelocity = 40; // Unlimited cruise velocity
-        // clawPipeWheelConfigs.MotionMagic.MotionMagicExpo_kV = 0.12; // kV is around 0.12 V/rps
-        // clawPipeWheelConfigs.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
-        // clawPipeWheelConfigs.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0
 
-        clawPipeWheelConfigs.Slot0.kS = 0.3;
-        clawPipeWheelConfigs.Slot0.kV = 0.12;
-        clawPipeWheelConfigs.Slot0.kA = 0;
-        clawPipeWheelConfigs.Slot0.kP = 0.3;
+        clawPipeWheelConfigs.Slot0.kS = 4.7;
+        clawPipeWheelConfigs.Slot0.kV = 0.09;
+        clawPipeWheelConfigs.Slot0.kA = 5;
+        clawPipeWheelConfigs.Slot0.kP = 5;
         clawPipeWheelConfigs.Slot0.kI = 0;
-        clawPipeWheelConfigs.Slot0.kD = 0;
-        clawPipeWheelConfigs.MotionMagic.MotionMagicAcceleration = 2000; // Acceleration is around 40 rps/s
-        clawPipeWheelConfigs.MotionMagic.MotionMagicCruiseVelocity = 2000; // Unlimited cruise velocity
+        clawPipeWheelConfigs.Slot0.kD = 0.25;
+        clawPipeWheelConfigs.MotionMagic.MotionMagicAcceleration = 100; // Acceleration is around 40 rps/s
+        clawPipeWheelConfigs.MotionMagic.MotionMagicCruiseVelocity = 200; // Unlimited cruise velocity
         clawPipeWheelConfigs.MotionMagic.MotionMagicExpo_kV = 0.12; // kV is around 0.12 V/rps
         clawPipeWheelConfigs.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
         clawPipeWheelConfigs.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0
+
+        // clawPipeWheelConfigs.Slot0.kS = 0.3;
+        // clawPipeWheelConfigs.Slot0.kV = 0.12;
+        // clawPipeWheelConfigs.Slot0.kA = 0;
+        // clawPipeWheelConfigs.Slot0.kP = 0.3;
+        // clawPipeWheelConfigs.Slot0.kI = 0;
+        // clawPipeWheelConfigs.Slot0.kD = 0;
+        // clawPipeWheelConfigs.MotionMagic.MotionMagicAcceleration = 2000; // Acceleration is around 40 rps/s
+        // clawPipeWheelConfigs.MotionMagic.MotionMagicCruiseVelocity = 2000; // Unlimited cruise velocity
+        // clawPipeWheelConfigs.MotionMagic.MotionMagicExpo_kV = 0.12; // kV is around 0.12 V/rps
+        // clawPipeWheelConfigs.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
+        // clawPipeWheelConfigs.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0
 
         m_clawPipeWheel.getConfigurator().apply(clawPipeWheelConfigs);
 
         // claw wheel configs
         var clawWheelConfigs = new TalonFXConfiguration();
 
-        // clawWheelConfigs.Slot0.kS = 1.5;
-        // clawWheelConfigs.Slot0.kV = 0.08;
-        // clawWheelConfigs.Slot0.kA = 0;
-        // clawWheelConfigs.Slot0.kP = 5;
-        // clawWheelConfigs.Slot0.kI = 0;
-        // clawWheelConfigs.Slot0.kD = 0;
-        // clawWheelConfigs.MotionMagic.MotionMagicAcceleration = 20; // Acceleration is around 40 rps/s
-        // clawWheelConfigs.MotionMagic.MotionMagicCruiseVelocity = 40; // Unlimited cruise velocity
-        // clawWheelConfigs.MotionMagic.MotionMagicExpo_kV = 0.12; // kV is around 0.12 V/rps
-        // clawWheelConfigs.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
-        // clawWheelConfigs.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0
-
-        clawWheelConfigs.Slot0.kS = 0.3;
-        clawWheelConfigs.Slot0.kV = 0.1;
-        clawWheelConfigs.Slot0.kA = 0;
-        clawWheelConfigs.Slot0.kP = 0.3;
+        clawWheelConfigs.Slot0.kS = 1.5;
+        clawWheelConfigs.Slot0.kV = 0.08;
+        clawWheelConfigs.Slot0.kA = 5;
+        clawWheelConfigs.Slot0.kP = 7;
         clawWheelConfigs.Slot0.kI = 0;
         clawWheelConfigs.Slot0.kD = 0;
-        clawWheelConfigs.MotionMagic.MotionMagicAcceleration = 2000; // Acceleration is around 40 rps/s
-        clawWheelConfigs.MotionMagic.MotionMagicCruiseVelocity = 2000; // Unlimited cruise velocity
+        clawWheelConfigs.MotionMagic.MotionMagicAcceleration = 100; // Acceleration is around 40 rps/s
+        clawWheelConfigs.MotionMagic.MotionMagicCruiseVelocity = 200; // Unlimited cruise velocity
         clawWheelConfigs.MotionMagic.MotionMagicExpo_kV = 0.12; // kV is around 0.12 V/rps
         clawWheelConfigs.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
         clawWheelConfigs.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0
+
+        // clawWheelConfigs.Slot0.kS = 0.3;
+        // clawWheelConfigs.Slot0.kV = 0.1;
+        // clawWheelConfigs.Slot0.kA = 0;
+        // clawWheelConfigs.Slot0.kP = 0.3;
+        // clawWheelConfigs.Slot0.kI = 0;
+        // clawWheelConfigs.Slot0.kD = 0;
+        // clawWheelConfigs.MotionMagic.MotionMagicAcceleration = 2000; // Acceleration is around 40 rps/s
+        // clawWheelConfigs.MotionMagic.MotionMagicCruiseVelocity = 2000; // Unlimited cruise velocity
+        // clawWheelConfigs.MotionMagic.MotionMagicExpo_kV = 0.12; // kV is around 0.12 V/rps
+        // clawWheelConfigs.MotionMagic.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
+        // clawWheelConfigs.MotionMagic.MotionMagicJerk = 0; // Jerk is around 0
 
 
         m_clawWheel.getConfigurator().apply(clawWheelConfigs);
@@ -319,8 +315,8 @@ public class Claw extends SubsystemBase {
      */
     public Command shootBall() {
         return runEnd(() -> {
-            setClawPipeWheelVelocity(Constants.Claw.SHOOT__BALL_PIPEWHEEL_SPEED);
-            setClawWheelVelocity(Constants.Claw.SHOOT__BALL_WHEEL_SPEED);
+            setClawPipeWheelVelocity(Constants.Claw.SHOOT_BALL_PIPEWHEEL_SPEED);
+            setClawWheelVelocity(Constants.Claw.SHOOT_BALL_WHEEL_SPEED);
         },
                 () -> {
                     setClawPipeWheelVelocity(0.0);

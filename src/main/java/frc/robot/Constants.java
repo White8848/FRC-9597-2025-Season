@@ -46,8 +46,19 @@ public class Constants {
         public static final double GET_BALL_WHEEL_SPEED =50.0;
         public static final double HOLD_BALL_PIPEWHEEL_SPEED =-50.0;
         public static final double HOLD_BALL_WHEEL_SPEED =50.0;
-        public static final double SHOOT__BALL_PIPEWHEEL_SPEED =+100.0;
-        public static final double SHOOT__BALL_WHEEL_SPEED =-100.0;
+        public static final double SHOOT_BALL_PIPEWHEEL_SPEED =+100.0;
+        public static final double SHOOT_BALL_WHEEL_SPEED =-100.0;
+
+        //voltage
+        public static final double GET_REFF_VOLTAGE =2.0;
+        public static final double SHOOT_REFF_VOLTAGE =2.0;
+        public static final double GET_BALL_PIPEWHEEL_VOLTAGE =-5.0;
+        public static final double GET_BALL_WHEEL_VOLTAGE =5.0;
+        public static final double HOLD_BALL_PIPEWHEEL_VOLTAGE =-1.5;
+        public static final double HOLD_BALL_WHEEL_VOLTAGE =1.5;
+        public static final double SHOOT_BALL_PIPEWHEEL_VOLTAGE =16.0;
+        public static final double SHOOT_BALL_WHEEL_VOLTAGE =-16.0;
+
     }
 
     // Elevator Constants
@@ -63,7 +74,7 @@ public class Constants {
         public static final double ELEVATOR_REEF_4 = 26.0;
         public static final double ELEVATOR_GETBALL1 = 10.8;
         public static final double ELEVATOR_GETBALL2 = 18.8;
-        public static final double ELEVATOR_BARGE  = 28.2;
+        public static final double ELEVATOR_BARGE  = 28.5;
         public static final double ELEVATOR_ShALLOWCAGE_UP  = 10.0;
         public static final double ELEVATOR_ShALLOWCAGE_DOWN  = 2.0;
 

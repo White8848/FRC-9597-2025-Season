@@ -6,15 +6,15 @@ package frc.robot;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Subsystems.CANdleSystem;
 import frc.robot.Subsystems.Claw;
 import frc.robot.Subsystems.CommandSwerveDrivetrain;
@@ -78,9 +78,13 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(Utility.quadraticCurve(-m_driverJoystick.getLeftY()) * MaxSpeed)// Drive forward with negative Y (forward)
-                .withVelocityY(Utility.quadraticCurve(-m_driverJoystick.getLeftX() )* MaxSpeed)// Drive left with negative X (left)
-                .withRotationalRate(Utility.quadraticCurve(-m_driverJoystick.getRightX()) * MaxAngularRate)// Drive counterclockwise with negative X (left)
+                // drive.withVelocityX(Utility.quadraticCurve(-m_driverJoystick.getLeftY()) * MaxSpeed)// Drive forward with negative Y (forward)
+                // .withVelocityY(Utility.quadraticCurve(-m_driverJoystick.getLeftX() )* MaxSpeed)// Drive left with negative X (left)
+                // .withRotationalRate(Utility.quadraticCurve(-m_driverJoystick.getRightX()) * MaxAngularRate)// Drive counterclockwise with negative X (left)
+
+                drive.withVelocityX((-m_driverJoystick.getLeftY()) * MaxSpeed)// Drive forward with negative Y (forward)
+                .withVelocityY((-m_driverJoystick.getLeftX() )* MaxSpeed)// Drive left with negative X (left)
+                .withRotationalRate((-m_driverJoystick.getRightX()) * MaxAngularRate)// Drive counterclockwise with negative X (left)
             )
         );
 
