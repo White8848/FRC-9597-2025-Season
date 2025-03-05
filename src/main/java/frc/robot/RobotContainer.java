@@ -106,8 +106,10 @@ public class RobotContainer {
         m_driverJoystick.rightBumper().whileTrue(claw.clawWheelIntake());
         //shoot reef
         m_driverJoystick.rightTrigger().whileTrue(claw.clawWheelOuttake());
+        //back reef little by hand
+        m_driverJoystick.leftTrigger().whileTrue(claw.clawWheelbacklittle());
 
-        // //************************************************************ DEEPCAGE(operator) ****************************************************
+        // //********************************************************** * DEEPCAGE(operator) ****************************************************
         //m_driverJoystick.leftTrigger().whileTrue(deepcage.intakeBall());
         //m_driverJoystick.rightTrigger().whileTrue(deepcage.ejectBall());
 

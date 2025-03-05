@@ -123,8 +123,8 @@ public class Claw extends SubsystemBase {
 
         clawPipeWheelConfigs.Slot0.kS = 4.7;
         clawPipeWheelConfigs.Slot0.kV = 0.09;
-        clawPipeWheelConfigs.Slot0.kA = 5;
-        clawPipeWheelConfigs.Slot0.kP = 5;
+        clawPipeWheelConfigs.Slot0.kA = 1;
+        clawPipeWheelConfigs.Slot0.kP = 4;
         clawPipeWheelConfigs.Slot0.kI = 0;
         clawPipeWheelConfigs.Slot0.kD = 0.25;
         clawPipeWheelConfigs.MotionMagic.MotionMagicAcceleration = 100; // Acceleration is around 40 rps/s
@@ -152,7 +152,7 @@ public class Claw extends SubsystemBase {
 
         clawWheelConfigs.Slot0.kS = 1.5;
         clawWheelConfigs.Slot0.kV = 0.08;
-        clawWheelConfigs.Slot0.kA = 5;
+        clawWheelConfigs.Slot0.kA = 1;
         clawWheelConfigs.Slot0.kP = 7;
         clawWheelConfigs.Slot0.kI = 0;
         clawWheelConfigs.Slot0.kD = 0;
@@ -284,6 +284,17 @@ public class Claw extends SubsystemBase {
 
         return startEnd(
                 () -> setClawPipeWheelVelocity(Constants.Claw.SHOOT_REFF_SPEED),
+
+                () -> setClawPipeWheelVelocity(0)
+
+        );
+
+    }
+
+    public Command clawWheelbacklittle() {
+
+        return startEnd(
+                () -> setClawPipeWheelVelocity(Constants.Claw.BACK_REFF_SPEED),
 
                 () -> setClawPipeWheelVelocity(0)
 

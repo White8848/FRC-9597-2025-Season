@@ -31,7 +31,7 @@ public class Constants {
         public static final double CLAW_PITCH_START = 0.0;
         public static final double CLAW_PITCH_REEF_2 = 0.05;
         public static final double CLAW_PITCH_REEF_3 = 0.05;
-        public static final double CLAW_PITCH_REEF_4 = 0.17;
+        public static final double CLAW_PITCH_REEF_4 = 0.13;
         public static final double CLAW_PITCH_GETBALL = 0.54;
         public static final double CLAW_PITCH_BARGE = 0.3;
         public static final double CLAW_PITCH_AVOID_COLLISION1 = 0.03;//from start to any position,advoid collision
@@ -40,12 +40,13 @@ public class Constants {
 
 
         //speed
-        public static final double GET_REFF_SPEED =10.0;
+        public static final double GET_REFF_SPEED =15.0;
         public static final double SHOOT_REFF_SPEED =25.0;
+        public static final double BACK_REFF_SPEED =-10.0;//手动回收一点
         public static final double GET_BALL_PIPEWHEEL_SPEED =-50.0;
         public static final double GET_BALL_WHEEL_SPEED =50.0;
-        public static final double HOLD_BALL_PIPEWHEEL_SPEED =-50.0;
-        public static final double HOLD_BALL_WHEEL_SPEED =50.0;
+        public static final double HOLD_BALL_PIPEWHEEL_SPEED =-30.0;
+        public static final double HOLD_BALL_WHEEL_SPEED =30.0;
         public static final double SHOOT_BALL_PIPEWHEEL_SPEED =+100.0;
         public static final double SHOOT_BALL_WHEEL_SPEED =-100.0;
 
@@ -97,7 +98,7 @@ public class Constants {
     public static class Vision {
         // The layout of the AprilTags on the field
         public static final AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout
-                .loadField(AprilTagFields.k2025Reefscape);
+                .loadField(AprilTagFields.kDefaultField);
     }
 
 }
