@@ -12,14 +12,17 @@ public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
 
   private final RobotContainer m_robotContainer;
+  //private final SysIdRoutineBot m_robot = new SysIdRoutineBot();
 
   public Robot() {
     m_robotContainer = new RobotContainer();
+    //m_robot.configure_Sysid_Bindings();//test mode bingdings
+
   }
 
   @Override
   public void robotPeriodic() {
-    CommandScheduler.getInstance().run();
+    CommandScheduler.getInstance().run(); 
   }
 
   @Override
@@ -69,4 +72,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void testExit() {}
+
+  @Override
+  public void simulationPeriodic() {}
 }
