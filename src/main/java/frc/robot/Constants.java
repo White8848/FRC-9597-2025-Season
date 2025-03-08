@@ -42,7 +42,7 @@ public class Constants {
         //speed
         public static final double GET_REFF_SPEED =15.0;
         public static final double SHOOT_REFF_SPEED =25.0;
-        public static final double BACK_REFF_SPEED =-10.0;//手动回收一点
+        public static final double BACK_REFF_SPEED =-10.0;//back a little
         public static final double GET_BALL_PIPEWHEEL_SPEED =-50.0;
         public static final double GET_BALL_WHEEL_SPEED =50.0;
         public static final double HOLD_BALL_PIPEWHEEL_SPEED =-30.0;
@@ -59,14 +59,13 @@ public class Constants {
         public static final double HOLD_BALL_WHEEL_VOLTAGE =1.5;
         public static final double SHOOT_BALL_PIPEWHEEL_VOLTAGE =16.0;
         public static final double SHOOT_BALL_WHEEL_VOLTAGE =-16.0;
-
     }
 
     // Elevator Constants
     public static class Elevator {
 
         public enum State {
-            START, INTAKE, REEF_2, REEF_3, REEF_4, GETBALL1, GETBALL2, BARGE, FLOW;
+            START_AUTO, START_OPERATED, START, INTAKE, REEF_2, REEF_3, REEF_4, GETBALL1, GETBALL2, BARGE, FLOW;
         };
 
         public static final double ELEVATOR_START  = -0.3;
@@ -80,6 +79,7 @@ public class Constants {
         public static final double ELEVATOR_ShALLOWCAGE_DOWN  = 2.0;
 
         public static final double ELEVATOR_ACCEPT_ERROR = 2.0;
+
     }
 
     public static class DEEPCAGE {
@@ -96,9 +96,10 @@ public class Constants {
 
 
     public static class Vision {
-        // The layout of the AprilTags on the field
-        public static final AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout
-                .loadField(AprilTagFields.kDefaultField);
+    // The layout of the AprilTags on the field
+    public static final AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout
+            .loadField(AprilTagFields.kDefaultField);
+    
     }
 
 }

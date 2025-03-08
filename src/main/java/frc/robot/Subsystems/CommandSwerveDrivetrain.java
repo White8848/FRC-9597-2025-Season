@@ -1,51 +1,78 @@
 package frc.robot.Subsystems;
 
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 
+import org.littletonrobotics.junction.Logger;
+import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
+import org.photonvision.targeting.PhotonPipelineResult;
+import org.photonvision.targeting.MultiTargetPNPResult;;
+import org.photonvision.targeting.PhotonTrackedTarget;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
-
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.util.Units;
 import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Mass;
+import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Constants;
+import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 
-import org.photonvision.PhotonCamera;
-import org.photonvision.EstimatedRobotPose;
-import org.photonvision.PhotonCamera;
-import org.photonvision.PhotonPoseEstimator;
-import org.photonvision.PhotonPoseEstimator.PoseStrategy;
-import org.photonvision.simulation.PhotonCameraSim;
-import org.photonvision.simulation.SimCameraProperties;
-import org.photonvision.simulation.VisionSystemSim;
-import org.photonvision.targeting.PhotonTrackedTarget;
 
-import static frc.robot.Constants.Vision.*;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.config.*;
+import com.ctre.phoenix6.swerve.SwerveModuleConstants;
+import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
+
+import static edu.wpi.first.units.Units.Kilogram;
+import static edu.wpi.first.units.Units.KilogramSquareMeters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -68,6 +95,29 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
     private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
 
+    //vision
+    public  boolean kUseVision = true;
+    private final Map<PhotonCamera, PhotonPoseEstimator> cameraEstimators = new HashMap<>();
+    private final AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+
+    //Auto
+    // PathPlanner config constants
+    private static final Mass ROBOT_MASS = Kilogram.of(74);
+    private static final MomentOfInertia ROBOT_MOI =KilogramSquareMeters.of(6.8);
+    private static final double WHEEL_COF = 1.2;
+    public static final SwerveModuleConstants SWERVE_MODULE_CONSTANTS = TunerConstants.FrontLeft;
+    public static final Translation2d[] SWERVE_MODULE_OFFSETS =
+    new Translation2d[] {
+      new Translation2d(TunerConstants.FrontLeft.LocationX, TunerConstants.FrontLeft.LocationY),
+      new Translation2d(TunerConstants.FrontRight.LocationX, TunerConstants.FrontRight.LocationY),
+      new Translation2d(TunerConstants.BackLeft.LocationX, TunerConstants.BackLeft.LocationY),
+      new Translation2d(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)
+    };
+
+    /** Swerve request to apply during robot-centric path following */
+    private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds =new SwerveRequest.ApplyRobotSpeeds();
+
+    
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
         new SysIdRoutine.Config(
@@ -127,11 +177,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         )
     );
 
+
     /* The SysId routine to test */
     private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
 
     /**
-     * Constructs a CTRE SwerveDrivetrain using the specified constants.
+     * Constructs a CTRE SwerveDrivetrain using the specified constants .
      * <p>
      * This constructs the underlying hardware devices, so users should not construct
      * the devices themselves. If they need the devices, they can access them through
@@ -148,63 +199,80 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (Utils.isSimulation()) {
             startSimThread();
         }
+
+        // initialize camera system
+        cameraEstimators.put(
+            new PhotonCamera("Camera_left"),
+            new PhotonPoseEstimator(
+                aprilTagFieldLayout,
+                PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
+                new Transform3d(
+                    new Translation3d(0.32, 0.32, 0.5),//z to elevator
+                    new Rotation3d(     
+                    0,
+                    Units.degreesToRadians(0),//pitch
+                    Units.degreesToRadians(30))//yaw
+                )
+            )
+        );
+        cameraEstimators.put(
+            new PhotonCamera("Camera_right"), 
+            new PhotonPoseEstimator(
+                aprilTagFieldLayout,
+                PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
+                new Transform3d(
+                    new Translation3d(0.32, -0.32, 0.5),
+                    new Rotation3d(     
+                        0,
+                        Units.degreesToRadians(0),//pitch
+                        Units.degreesToRadians(330))//yaw
+                )
+            )
+        );
+        System.out.println("finish camera initialization");
+
+        // Robot config
+        RobotConfig robotConfig = null; // Initialize with null in case of exception
+        try {
+            robotConfig =
+                    RobotConfig.fromGUISettings(); // Takes config from Robot Config on Pathplanner
+            // Settings
+        } catch (Exception e) {
+            e.printStackTrace(); // Fallback to a default configuration
+        }
+
+        // Configure AutoBuilder last
+        AutoBuilder.configure(
+                this::getPose, // Robot pose supplier
+                this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
+                this::getRobotRelativeSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+                (speeds, feedforwards) -> this.setControl(
+                    m_pathApplyRobotSpeeds
+                        .withSpeeds(speeds)
+                        .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
+                        .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())), // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
+                new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
+                        new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
+                        new PIDConstants(5.0, 0.0, 0.0) // Rotation PID constants
+                ),
+                robotConfig,//load the parameters from the gui
+                () -> {
+
+                // Boolean supplier that controls when the path will be mirrored for the red alliance
+                // This will flip the path being followed to the red side of the field.
+                // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+
+                var alliance = DriverStation.getAlliance();
+                if (alliance.isPresent()) {
+                    return alliance.get() == DriverStation.Alliance.Red;
+                }
+                return false;
+                },
+                this // Reference to this subsystem to set requirements
+        );
     }
 
-    /**
-     * Constructs a CTRE SwerveDrivetrain using the specified constants.
-     * <p>
-     * This constructs the underlying hardware devices, so users should not construct
-     * the devices themselves. If they need the devices, they can access them through
-     * getters in the classes.
-     *
-     * @param drivetrainConstants     Drivetrain-wide constants for the swerve drive
-     * @param odometryUpdateFrequency The frequency to run the odometry loop. If
-     *                                unspecified or set to 0 Hz, this is 250 Hz on
-     *                                CAN FD, and 100 Hz on CAN 2.0.
-     * @param modules                 Constants for each specific module
-     */
-    public CommandSwerveDrivetrain(
-        SwerveDrivetrainConstants drivetrainConstants,
-        double odometryUpdateFrequency,
-        SwerveModuleConstants<?, ?, ?>... modules
-    ) {
-        super(drivetrainConstants, odometryUpdateFrequency, modules);
-        if (Utils.isSimulation()) {
-            startSimThread();
-        }
-    }
 
-    /**
-     * Constructs a CTRE SwerveDrivetrain using the specified constants.
-     * <p>
-     * This constructs the underlying hardware devices, so users should not construct
-     * the devices themselves. If they need the devices, they can access them through
-     * getters in the classes.
-     *
-     * @param drivetrainConstants       Drivetrain-wide constants for the swerve drive
-     * @param odometryUpdateFrequency   The frequency to run the odometry loop. If
-     *                                  unspecified or set to 0 Hz, this is 250 Hz on
-     *                                  CAN FD, and 100 Hz on CAN 2.0.
-     * @param odometryStandardDeviation The standard deviation for odometry calculation
-     *                                  in the form [x, y, theta]ᵀ, with units in meters
-     *                                  and radians
-     * @param visionStandardDeviation   The standard deviation for vision calculation
-     *                                  in the form [x, y, theta]ᵀ, with units in meters
-     *                                  and radians
-     * @param modules                   Constants for each specific module
-     */
-    public CommandSwerveDrivetrain(
-        SwerveDrivetrainConstants drivetrainConstants,
-        double odometryUpdateFrequency,
-        Matrix<N3, N1> odometryStandardDeviation,
-        Matrix<N3, N1> visionStandardDeviation,
-        SwerveModuleConstants<?, ?, ?>... modules
-    ) {
-        super(drivetrainConstants, odometryUpdateFrequency, odometryStandardDeviation, visionStandardDeviation, modules);
-        if (Utils.isSimulation()) {
-            startSimThread();
-        }
-    }
 
     /**
      * Returns a command that applies the specified control request to this swerve drivetrain.
@@ -216,57 +284,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return run(() -> this.setControl(requestSupplier.get()));
     }
 
-    /**
-     * Runs the SysId Quasistatic test in the given direction for the routine
-     * specified by {@link #m_sysIdRoutineToApply}.
-     *
-     * @param direction Direction of the SysId Quasistatic test
-     * @return Command to run
-     */
-    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-        return m_sysIdRoutineToApply.quasistatic(direction);
-    }
-
-    /**
-     * Runs the SysId Dynamic test in the given direction for the routine
-     * specified by {@link #m_sysIdRoutineToApply}.
-     *
-     * @param direction Direction of the SysId Dynamic test
-     * @return Command to run
-     */
-    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-        return m_sysIdRoutineToApply.dynamic(direction);
-    }
-
-    //   /* PhotonVision camera */
-    //   private final PhotonCamera frontCamera = new PhotonCamera("photonvision-front");
-    //   private final PhotonCamera leftCamera = new PhotonCamera("photonvision-left");
-    //   // The field from AprilTagFields will be different depending on the game.
-  
-    //   /* PhotonVision camera Transform3d */
-    //   private final Transform3d robotToFrontCam = new Transform3d(
-    //       new Translation3d(0.5, 0.0, 0.5), 
-    //       new Rotation3d(0, 0, 0)
-    //   );
-    //   private final Transform3d robotToLeftCam = new Transform3d(
-    //       new Translation3d(0.0, -0.3, 0.5), 
-    //       new Rotation3d(0, 0, Math.toRadians(-90)) 
-    //   );
-  
-    //   /* PhotonVision camera Estimator */
-    //   private final PhotonPoseEstimator frontEstimator = new PhotonPoseEstimator(
-    //       aprilTagFieldLayout, 
-    //       PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-    //       robotToFrontCam
-    //   );
-  
-    //   private final PhotonPoseEstimator leftEstimator = new PhotonPoseEstimator(
-    //       aprilTagFieldLayout,
-    //       PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-    //       robotToLeftCam
-    //   );
-  
-
+    
     @Override
     public void periodic() {
         /*
@@ -287,42 +305,106 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             });
         }
 
-        //vision processing
-        //processVisionData();
+        //vision processing 
+        processVisionData();
     }
 
-    // // Process vision data from PhotonVision
-    // private void processVisionData() {
+/***************************************************************** process  vision data   ***********************************************************/
+    private void processVisionData() {
+        //System.out.println("vision status "+kUseVision);
+        SwerveDriveState driveState = getState();
+        Pose2d odometryPose = driveState.Pose;
 
-    //     SwerveDriveState m_state = new SwerveDriveState();
+        // report the pose of drivetrain
+        SmartDashboard.putNumberArray("Chassis/Pose", 
+            new double[] {
+                odometryPose.getX(),
+                odometryPose.getY(),
+                odometryPose.getRotation().getDegrees()
+            });
 
-    //     // get the current pose from the drivetrain
-    //     Pose2d odometryPose = m_state.Pose;
-    
-    //     // front camera
-    //     processCamera(frontEstimator, odometryPose);
-    //     // left camera
-    //     processCamera(leftEstimator, odometryPose);
-    // }
+        cameraEstimators.forEach((camera, estimator) -> {
+            List<PhotonPipelineResult> cameraResults = camera.getAllUnreadResults();
+            if (cameraResults.isEmpty()) return;
+
+            PhotonPipelineResult latestResult = cameraResults.get(cameraResults.size() - 1);
+            if (!latestResult.hasTargets()) return;
+            //System.out.println("size"+latestResult.targets.size());
+
+            estimator.setReferencePose(odometryPose);
+            Optional<EstimatedRobotPose> estimatedPose = estimator.update(latestResult);
+            
+            estimatedPose.ifPresent(pose -> {
+                Matrix<N3, N1> stdDevs = calculateAdaptiveStdDevs(
+                    latestResult.targets.size(),
+                    calculateAverageDistance(latestResult.targets),
+                    driveState.Speeds
+                );
+              
+                if(kUseVision){//if vision is enabled
+                    addVisionMeasurement(
+                        pose.estimatedPose.toPose2d(),
+                        latestResult.getTimestampSeconds(),
+                        stdDevs
+                    );
+                }
+
+                // report vision data
+                Pose2d visionPose = pose.estimatedPose.toPose2d();
+                String cameraName = camera.getName();
+                SmartDashboard.putNumberArray("Vision/Pose/" + cameraName, 
+                    new double[] {
+                        visionPose.getX(),
+                        visionPose.getY(),
+                        visionPose.getRotation().getDegrees()
+                    });
+                
+                // report ID
+                int[] targetIds = latestResult.targets.stream()
+                    .mapToInt(PhotonTrackedTarget::getFiducialId)
+                    .toArray();
+                SmartDashboard.putNumberArray("Vision/Targets/" + cameraName, 
+                    Arrays.stream(targetIds).asDoubleStream().toArray());
+
+                Logger.recordOutput("Vision/" + cameraName + "/Pose", pose.estimatedPose);
+            });
+        });
+    }
 
 
-    // private void processCamera(PhotonPoseEstimator estimator, Pose2d referencePose) {
-    //     estimator.setReferencePose(referencePose); // set the reference pose
-    //     var result = estimator.update();        
-    //     if (result.isPresent()) {
-    //         EstimatedRobotPose estimation = result.get();
-    //         // check if we have enough targets to trust the estimation
-    //         if (estimation.targetsUsed.size() >= 2) {
-               
-    //             //Matrix<N3, N1> stdDevs = VecBuilder.fill(0.3, 0.3, 0.5);
-    //             addVisionMeasurement(
-    //                 estimation.estimatedPose.toPose2d(),
-    //                 estimation.timestampSeconds
-    //                 //stdDevs
-    //             );
-    //         }
-    //     }
-    // }
+    // New standard deviation calculation method
+    private Matrix<N3, N1> calculateAdaptiveStdDevs(int tagCount, double avgDistance, ChassisSpeeds speeds) {
+        double baseXY, baseTheta;
+        
+        // Set the base value based on the number of tags
+        if (tagCount >= 2) {
+            baseXY = 0.5;  
+            baseTheta = Math.toRadians(5); 
+        } else {
+            baseXY = 1.5 + avgDistance * 0.2; 
+            baseTheta = Math.toRadians(10 + avgDistance * 3); 
+        }
+
+        // Adjust dynamically based on speed
+        double speedFactor = Math.hypot(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond) / 4.0; // suppose the speed max=4m/s
+        double rotationFactor = Math.abs(speeds.omegaRadiansPerSecond) / Math.PI; // suppose the angular_speed=π rad/s
+        
+        return VecBuilder.fill(
+            baseXY * (1 + speedFactor),       // X standard deviation
+            baseXY * (1 + speedFactor),       // Y standard deviation
+            baseTheta * (1 + rotationFactor)  // θ standard deviation
+        );
+    }
+
+    // calculateAverageDistance
+    private double calculateAverageDistance(List<PhotonTrackedTarget> targets) {
+        return targets.stream()
+            .mapToDouble(t -> t.getBestCameraToTarget().getTranslation().getNorm())
+            .average()
+            .orElse(0.0);
+    }
+
+/********************************************************************** vision end *********************************************************** */
 
 
     private void startSimThread() {
@@ -373,4 +455,61 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     ) {
         super.addVisionMeasurement(visionRobotPoseMeters, Utils.fpgaToCurrentTime(timestampSeconds), visionMeasurementStdDevs);
     }
+
+    //get the pose of the robot
+    public Pose2d getPose() {
+        return this.getState().Pose;
+    }
+
+    //reset the pose of the robot
+    public void resetPose(Pose2d newPose) {
+        this.seedFieldCentric();
+    }
+
+    //get the robot relative speeds
+    public ChassisSpeeds getRobotRelativeSpeeds() {
+        return this.getKinematics().toChassisSpeeds(this.getState().ModuleStates);
+    }
+
+    //get the robot state auto or operated
+    public Constants.Elevator.State Get_Auto_State(){
+        if(kUseVision){
+            return Constants.Elevator.State.START_AUTO;
+        }
+        else{
+            return Constants.Elevator.State.START_OPERATED;
+        }
+    }
+
+    /**
+     * Runs the SysId Quasistatic test in the given direction for the routine
+     * specified by {@link #m_sysIdRoutineToApply}.
+     *
+     * @param direction Direction of the SysId Quasistatic test
+     * @return Command to run
+     */
+    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+        return m_sysIdRoutineToApply.quasistatic(direction);
+    }
+
+    /**
+     * Runs the SysId Dynamic test in the given direction for the routine
+     * specified by {@link #m_sysIdRoutineToApply}.
+     *
+     * @param direction Direction of the SysId Dynamic test
+     * @return Command to run
+     */
+    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+        return m_sysIdRoutineToApply.dynamic(direction);
+    }
+
+    public Command ChangeVisionDataStatus(){
+        return  runOnce(()->{
+            //System.out.println("vision status"+kUseVision);
+            kUseVision = !kUseVision;
+        });
+    }
+
+        
 }
+

@@ -61,14 +61,13 @@ public class CANdleSystem extends SubsystemBase {
         SetAll,
 
     }
-    public Elevator m_elevator;
     private AnimationTypes m_currentAnimation;
 
     public boolean isflow = false;
+    public Constants.Elevator.State m_current_state = Constants.Elevator.State.START_AUTO;
 
     public CANdleSystem(Elevator elevator) {
         //this.joystick = joy;
-        this.m_elevator = elevator;
         changeAnimation(AnimationTypes.SetAll);
         CANdleConfiguration configAll = new CANdleConfiguration();
         configAll.statusLedOffWhenActive = false;
@@ -81,7 +80,7 @@ public class CANdleSystem extends SubsystemBase {
     }
 
     public void incrementAnimation() {
-        m_elevator.m_current_state = Constants.Elevator.State.FLOW;
+        m_current_state = Constants.Elevator.State.FLOW;
         switch(m_currentAnimation) {
             case ColorFlow: changeAnimation(AnimationTypes.Fire); break;
             case Fire: changeAnimation(AnimationTypes.Larson); break;
@@ -96,7 +95,7 @@ public class CANdleSystem extends SubsystemBase {
         }
     }
     public void decrementAnimation() {
-        m_elevator.m_current_state = Constants.Elevator.State.FLOW;
+        m_current_state = Constants.Elevator.State.FLOW;
         switch(m_currentAnimation) {
             case ColorFlow: changeAnimation(AnimationTypes.TwinkleOff); break;
             case Fire: changeAnimation(AnimationTypes.ColorFlow); break;
@@ -110,12 +109,10 @@ public class CANdleSystem extends SubsystemBase {
             case SetAll: changeAnimation(AnimationTypes.ColorFlow); break;
         }
     }
-    public void Changecolor(Constants.Elevator.State state) {
-        m_elevator.m_current_state = state;//将颜色变为装逼灯
+    public void Changecolor(Constants.Elevator.State state) {//change color according to the position of elevator
+        m_current_state = state;
  
     }
-
-
 
     public void setOff() {
         m_candle1.animate(null);
@@ -250,9 +247,12 @@ public class CANdleSystem extends SubsystemBase {
     @Override
     public void periodic() {
         //System.out.println("m_currentstate: " + m_elevator.m_current_state);
-        switch(m_elevator.m_current_state) {
-            case START:
+        switch(m_current_state) {
+            case START_OPERATED:
                 setOff();
+                break;
+            case START_AUTO:
+                setOrange();
                 break;
             case INTAKE:
                 setRed();

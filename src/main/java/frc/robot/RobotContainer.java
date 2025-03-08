@@ -6,14 +6,26 @@ package frc.robot;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.events.EventTrigger;
+import com.pathplanner.lib.path.PathPlannerPath;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+
+import java.util.Set;
+
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Subsystems.CANdleSystem;
 import frc.robot.Subsystems.Claw;
@@ -35,9 +47,8 @@ public class RobotContainer {
         DEEPCAGE,
         INTAKE
     }    
-    private TestMode currentTestMode = TestMode.ELEVATOR; // FLAG
+    //private TestMode currentTestMode = TestMode.ELEVATOR; // FLAG
     
-
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
@@ -54,25 +65,42 @@ public class RobotContainer {
     private final CommandXboxController m_driverJoystick = new CommandXboxController(0);//two xbox controller
     private final CommandXboxController m_operatorJoystick = new CommandXboxController(1);
 
+    //subsystem
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-
     public final DeepCage deepcage = new DeepCage();
-
     public final Elevator elevator = new Elevator();
-
     public final CANdleSystem candle = new CANdleSystem(elevator);
-    
     public final Claw claw = new Claw();
 
-
+    //auto chooser
+    private final SendableChooser<Command> autoChooser;
 
     public RobotContainer() {
-        configureBindings();//operate mode bingings
+
+        //register the command
+        NamedCommands.registerCommand("coral",
+            elevator.ElevatorClawMove(Constants.Elevator.State.REEF_4)
+            .andThen(claw.Auto_clawWheelOuttake())
+            .andThen(Commands.defer(() -> 
+                Commands.waitSeconds(2.0)
+                    .andThen(claw.clawPipeWheelStop())
+                    .andThen(elevator.ElevatorClawMove(Constants.Elevator.State.START)),
+                Set.of() // no other requirements
+            ))
+        );
+
+        //auto settings 
+        autoChooser = AutoBuilder.buildAutoChooser("Auto1");
+        SmartDashboard.putData("Auto Chooser", autoChooser);
+        
+        //bind the all the commands
+        configureBindings();
+        
     }
 
     private void configureBindings() {
-        //************************************************************ (driver) *******************************************************
 
+        //************************************************************ (driver) *******************************************************
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
         drivetrain.setDefaultCommand(
@@ -104,20 +132,22 @@ public class RobotContainer {
 
         //intake reef
         m_driverJoystick.rightBumper().whileTrue(claw.clawWheelIntake());
+        
         //shoot reef
         m_driverJoystick.rightTrigger().whileTrue(claw.clawWheelOuttake());
+        
         //back reef little by hand
         m_driverJoystick.leftTrigger().whileTrue(claw.clawWheelbacklittle());
 
-        // //********************************************************** * DEEPCAGE(operator) ****************************************************
-        //m_driverJoystick.leftTrigger().whileTrue(deepcage.intakeBall());
-        //m_driverJoystick.rightTrigger().whileTrue(deepcage.ejectBall());
+        //choose if  using vision data
+        m_driverJoystick.b().onTrue(drivetrain.ChangeVisionDataStatus().
+                                andThen((new InstantCommand(() -> candle.Changecolor(drivetrain.Get_Auto_State()), candle))));
 
 
         //************************************************************ (operator) ********************************************************
-        //back to start
+        //back to start ,if using vision data->orange,or->off
         m_operatorJoystick.x().onTrue(elevator.ElevatorClawMove(Constants.Elevator.State.START)
-                                    .andThen((new InstantCommand(() -> candle.Changecolor(Constants.Elevator.State.START), candle))));
+                                    .andThen((new InstantCommand(() -> candle.Changecolor(drivetrain.Get_Auto_State()), candle))));
         //reef2
         m_operatorJoystick.povLeft().onTrue(elevator.ElevatorClawMove(Constants.Elevator.State.REEF_2)
                                     .andThen((new InstantCommand(() -> candle.Changecolor(Constants.Elevator.State.REEF_2), candle))));
@@ -128,18 +158,17 @@ public class RobotContainer {
         m_operatorJoystick.povUp().onTrue(elevator.ElevatorClawMove(Constants.Elevator.State.REEF_4)
                                     .andThen((new InstantCommand(() -> candle.Changecolor(Constants.Elevator.State.REEF_4), candle))));
         //get ball position 1
-   
         m_operatorJoystick.a().whileTrue(
                                     Commands.parallel(
-                                        elevator.ElevatorClawMove(Constants.Elevator.State.GETBALL1), // 让电梯和爪子运动
+                                        elevator.ElevatorClawMove(Constants.Elevator.State.GETBALL1), 
                                         claw.getBall() // 获取球的命令                                  
-                                    ).andThen(new InstantCommand(() -> candle.Changecolor(Constants.Elevator.State.GETBALL1), candle))); // 颜色变化
+                                    ).andThen(new InstantCommand(() -> candle.Changecolor(Constants.Elevator.State.GETBALL1), candle))); 
         //get ball position 2
         m_operatorJoystick.y().whileTrue(
                                     Commands.parallel(
-                                        elevator.ElevatorClawMove(Constants.Elevator.State.GETBALL2), // 让电梯和爪子运动
+                                        elevator.ElevatorClawMove(Constants.Elevator.State.GETBALL2), 
                                         claw.getBall() // 获取球的命令   
-                                    ).andThen(new InstantCommand(() -> candle.Changecolor(Constants.Elevator.State.GETBALL2), candle))); // 颜色变化
+                                    ).andThen(new InstantCommand(() -> candle.Changecolor(Constants.Elevator.State.GETBALL2), candle))); 
 
         //barge                              
         m_operatorJoystick.b().onTrue(elevator.ElevatorClawMove(Constants.Elevator.State.BARGE)
@@ -149,12 +178,7 @@ public class RobotContainer {
 
 
 
-        // //************************************************************ DEEPCAGE(operator) ****************************************************
-        // m_operatorJoystick.leftTrigger().whileTrue(deepcage.deepCagePitchUp());
-        // m_operatorJoystick.rightTrigger().whileTrue(deepcage.deepCagePitchDown());
-
-
-        // //********************************************************** Sysidroutine ******************************************************
+        // //********************************************************** (Sysidroutine) ******************************************************
         // // Run SysId routines when holding back/start and X/Y.
         // // Note that each routine should be run exactly once in a single log.
 
@@ -191,6 +215,8 @@ public class RobotContainer {
     }
 
     public Command getAutonomousCommand() {
-        return Commands.print("No autonomous command configured");
+
+        return autoChooser.getSelected();
+
     }
 }

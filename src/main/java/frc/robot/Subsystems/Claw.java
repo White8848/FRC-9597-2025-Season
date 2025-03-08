@@ -245,8 +245,11 @@ public class Claw extends SubsystemBase {
     public double getClawPitchPosition() {
         return m_clawPitchEncoder.getPosition().getValueAsDouble();
     }
-
-    //realese the evelator motor
+    /**
+     * realese the evelator motor
+     * 
+     * @return
+     */
     public void releaseClawPitch() {
         m_clawPitch.setControl(new VoltageOut(0.0));
     }
@@ -290,7 +293,22 @@ public class Claw extends SubsystemBase {
         );
 
     }
+    /**
+     * Runs the claw wheel outtake during automation.
+     * 
+     * @return
+     */
+    public Command Auto_clawWheelOuttake() {
 
+        return runOnce(
+                () -> setClawPipeWheelVelocity(Constants.Claw.SHOOT_REFF_SPEED));
+
+    }
+    /**
+     * back a little when coral sildes down
+     * 
+     * @return
+     */
     public Command clawWheelbacklittle() {
 
         return startEnd(
@@ -301,9 +319,20 @@ public class Claw extends SubsystemBase {
         );
 
     }
+    /**
+     * stop the pipewheel motor during automation
+     * 
+     * @return
+     */
+    public Command clawPipeWheelStop() {
+        return runOnce(() -> 
+            setClawPipeWheelVelocity(0)  
+
+        );
+    }
 
     /**
-     * Runs the claw pipe wheel intake.
+     * Runs the claw  pipewheel and wheel to intake the ball.
      * 
      * @return
      */
@@ -320,7 +349,7 @@ public class Claw extends SubsystemBase {
     }
 
     /**
-     * Runs the claw wheel outtake.
+     * Runs the claw  pipewheel and wheel to outtake the ball.
      * 
      * @return
      */
