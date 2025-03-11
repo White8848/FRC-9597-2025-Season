@@ -3,32 +3,16 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.865337624961469,
-        "y": 3.814257353544914
+        "x": 3.9488526138303315,
+        "y": 5.26435771339952
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.781601252559961,
-        "y": 4.321204331543486
+        "x": 3.7172266903617563,
+        "y": 5.413185585952949
       },
       "isLocked": false,
-      "linkedName": "path1up_end"
-    },
-    {
-      "anchor": {
-        "x": 5.083750621847488,
-        "y": 5.579245791592363
-      },
-      "prevControl": {
-        "x": 5.674022078700089,
-        "y": 5.02724549119689
-      },
-      "nextControl": {
-        "x": 3.4138943524965564,
-        "y": 7.140834365117366
-      },
-      "isLocked": false,
-      "linkedName": null
+      "linkedName": "path3up_end"
     },
     {
       "anchor": {
@@ -36,8 +20,8 @@
         "y": 6.97063884498728
       },
       "prevControl": {
-        "x": 1.431302048366463,
-        "y": 6.981489005606604
+        "x": 1.466628528109494,
+        "y": 6.8024463814024365
       },
       "nextControl": null,
       "isLocked": false,
@@ -48,8 +32,8 @@
   "constraintZones": [
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.0,
-      "maxWaypointRelativePos": 1.5,
+      "minWaypointRelativePos": 0,
+      "maxWaypointRelativePos": 0.75,
       "constraints": {
         "maxVelocity": 10.0,
         "maxAcceleration": 10.0,
@@ -61,11 +45,11 @@
     },
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 1.5,
-      "maxWaypointRelativePos": 2.0,
+      "minWaypointRelativePos": 0.75,
+      "maxWaypointRelativePos": 1.0,
       "constraints": {
-        "maxVelocity": 3.0,
-        "maxAcceleration": 3.0,
+        "maxVelocity": 10.0,
+        "maxAcceleration": 10.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,
         "nominalVoltage": 12.0,
@@ -74,17 +58,10 @@
     }
   ],
   "pointTowardsZones": [],
-  "eventMarkers": [
-    {
-      "name": "intakecoral",
-      "waypointRelativePos": 2.0,
-      "endWaypointRelativePos": null,
-      "command": null
-    }
-  ],
+  "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 3.0,
-    "maxAcceleration": 4.0,
+    "maxAcceleration": 5.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -98,7 +75,7 @@
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 179.99487251962046
+    "rotation": -57.18863320193199
   },
   "useDefaultConstraints": false
 }

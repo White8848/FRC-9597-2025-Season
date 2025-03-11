@@ -1,38 +1,35 @@
 // Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
-
 package frc.robot;
 
+import java.util.Set;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
-import com.pathplanner.lib.commands.PathPlannerAuto;
-import com.pathplanner.lib.events.EventTrigger;
-import com.pathplanner.lib.path.PathPlannerPath;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
-import java.util.Set;
-
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+
 import frc.robot.Subsystems.CANdleSystem;
 import frc.robot.Subsystems.Claw;
 import frc.robot.Subsystems.CommandSwerveDrivetrain;
 import frc.robot.Subsystems.DeepCage;
 import frc.robot.Subsystems.Elevator;
 import frc.robot.generated.TunerConstants;
+
+//import frc.robot.commands.AutoAlignToAprilTagCommand;
 
 //import frc.robot.Commands.Getballcommand;
 
@@ -75,6 +72,11 @@ public class RobotContainer {
     //auto chooser
     private final SendableChooser<Command> autoChooser;
 
+    // 在 RobotContainer 类中创建初始化命令
+    public Command getAutoInitCommand() {
+        return AutoBuilder.resetOdom(Constants.Vision.m_initialPose);//reset the odometry
+    }
+
     public RobotContainer() {
 
         //register the command
@@ -82,12 +84,15 @@ public class RobotContainer {
             elevator.ElevatorClawMove(Constants.Elevator.State.REEF_4)
             .andThen(claw.Auto_clawWheelOuttake())
             .andThen(Commands.defer(() -> 
-                Commands.waitSeconds(2.0)
+                Commands.waitSeconds(0.5)
                     .andThen(claw.clawPipeWheelStop())
                     .andThen(elevator.ElevatorClawMove(Constants.Elevator.State.START)),
                 Set.of() // no other requirements
             ))
         );
+
+            //register the command
+        NamedCommands.registerCommand("intake",claw.clawWheelIntake());
 
         //auto settings 
         autoChooser = AutoBuilder.buildAutoChooser("Auto1");
@@ -142,6 +147,8 @@ public class RobotContainer {
         //choose if  using vision data
         m_driverJoystick.b().onTrue(drivetrain.ChangeVisionDataStatus().
                                 andThen((new InstantCommand(() -> candle.Changecolor(drivetrain.Get_Auto_State()), candle))));
+
+        //m_driverJoystick.y().whileTrue(new AutoAlignToAprilTagCommand(drivetrain));//auto align to the tag
 
 
         //************************************************************ (operator) ********************************************************

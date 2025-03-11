@@ -11,9 +11,22 @@
           }
         },
         {
-          "type": "named",
+          "type": "parallel",
           "data": {
-            "name": "coral"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Path1_UP"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "coral"
+                }
+              }
+            ]
           }
         },
         {
@@ -21,11 +34,48 @@
           "data": {
             "pathName": "Path2"
           }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "intake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Path3"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Path3_UP"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "coral"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Path4"
+          }
         }
       ]
     }
   },
-  "resetOdom": true,
+  "resetOdom": false,
   "folder": null,
   "choreoAuto": false
 }

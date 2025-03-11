@@ -1,7 +1,6 @@
 package frc.robot.Subsystems;
 
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,17 +8,17 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.Logger;
+
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.targeting.PhotonPipelineResult;
-import org.photonvision.targeting.MultiTargetPNPResult;;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
-import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
+
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -30,7 +29,6 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -40,38 +38,28 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
-import static edu.wpi.first.units.Units.Second;
-import static edu.wpi.first.units.Units.Volts;
-import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Mass;
 import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.Volts;
+
 import frc.robot.Constants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 
-
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.config.*;
-import com.ctre.phoenix6.swerve.SwerveModuleConstants;
-import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
 
 import static edu.wpi.first.units.Units.Kilogram;
 import static edu.wpi.first.units.Units.KilogramSquareMeters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 
 /**
@@ -97,7 +85,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     //vision
     public  boolean kUseVision = true;
-    private final Map<PhotonCamera, PhotonPoseEstimator> cameraEstimators = new HashMap<>();
+    public final Map<PhotonCamera, PhotonPoseEstimator> cameraEstimators = new HashMap<>();
     private final AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
     //Auto
@@ -113,6 +101,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
       new Translation2d(TunerConstants.BackLeft.LocationX, TunerConstants.BackLeft.LocationY),
       new Translation2d(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)
     };
+    
 
     /** Swerve request to apply during robot-centric path following */
     private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds =new SwerveRequest.ApplyRobotSpeeds();
@@ -199,7 +188,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (Utils.isSimulation()) {
             startSimThread();
         }
-
+        
         // initialize camera system
         cameraEstimators.put(
             new PhotonCamera("Camera_left"),
@@ -241,6 +230,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             e.printStackTrace(); // Fallback to a default configuration
         }
 
+
         // Configure AutoBuilder last
         AutoBuilder.configure(
                 this::getPose, // Robot pose supplier
@@ -270,8 +260,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 },
                 this // Reference to this subsystem to set requirements
         );
-    }
+        AutoBuilder.resetOdom(Constants.Vision.m_initialPose);
 
+
+
+    }
 
 
     /**
@@ -461,9 +454,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return this.getState().Pose;
     }
 
-    //reset the pose of the robot
-    public void resetPose(Pose2d newPose) {
-        this.seedFieldCentric();
+    public Command resetpose(Pose2d pose){
+        return runOnce(
+            ()->resetPose(pose));
     }
 
     //get the robot relative speeds
