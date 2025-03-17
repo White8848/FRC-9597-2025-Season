@@ -35,7 +35,7 @@ public class Constants {
         public static final double CLAW_PITCH_START = 0.0;
         public static final double CLAW_PITCH_REEF_2 = 0.05;
         public static final double CLAW_PITCH_REEF_3 = 0.05;
-        public static final double CLAW_PITCH_REEF_4 = 0.13;
+        public static final double CLAW_PITCH_REEF_4 = 0.17;
         public static final double CLAW_PITCH_GETBALL = 0.54;
         public static final double CLAW_PITCH_BARGE = 0.3;
         public static final double CLAW_PITCH_AVOID_COLLISION1 = 0.05;//from start to any position,advoid collision
@@ -59,7 +59,7 @@ public class Constants {
         public static final double SHOOT_REFF_VOLTAGE =2.0;
         public static final double GET_BALL_PIPEWHEEL_VOLTAGE =-5.0;
         public static final double GET_BALL_WHEEL_VOLTAGE =5.0;
-        public static final double HOLD_BALL_PIPEWHEEL_VOLTAGE =-1.5;
+        public static final double HOLD_BALL_PIPEWHEEL_VOLTAGE =-1.5;   
         public static final double HOLD_BALL_WHEEL_VOLTAGE =1.5;
         public static final double SHOOT_BALL_PIPEWHEEL_VOLTAGE =16.0;
         public static final double SHOOT_BALL_WHEEL_VOLTAGE =-16.0;
@@ -72,10 +72,10 @@ public class Constants {
             START_AUTO, START_OPERATED, START, INTAKE, REEF_2, REEF_3, REEF_4, GETBALL1, GETBALL2, BARGE, FLOW;
         };
 
-        public static final double ELEVATOR_START  = -0.3;
+        public static final double ELEVATOR_START  = 0.2;
         public static final double ELEVATOR_REEF_2 = 5.0;
         public static final double ELEVATOR_REEF_3 = 13.0;
-        public static final double ELEVATOR_REEF_4 = 26.0;
+        public static final double ELEVATOR_REEF_4 = 27.0;
         public static final double ELEVATOR_GETBALL1 = 10.8;
         public static final double ELEVATOR_GETBALL2 = 18.8;
         public static final double ELEVATOR_BARGE  = 28.5;

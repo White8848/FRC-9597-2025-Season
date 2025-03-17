@@ -76,8 +76,8 @@ public class Elevator extends SubsystemBase {
         elevatorConfigs.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
         // set Motion Magic Expo settings
-        elevatorConfigs.MotionMagic.MotionMagicAcceleration = 80;
-        elevatorConfigs.MotionMagic.MotionMagicCruiseVelocity = 40;
+        elevatorConfigs.MotionMagic.MotionMagicAcceleration = 200;
+        elevatorConfigs.MotionMagic.MotionMagicCruiseVelocity = 100;
         elevatorConfigs.MotionMagic.MotionMagicExpo_kV = 0.12;
         elevatorConfigs.MotionMagic.MotionMagicExpo_kA = 0.1;
         elevatorConfigs.MotionMagic.MotionMagicJerk = 0;
