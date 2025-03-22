@@ -1,10 +1,7 @@
 // Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
-
 package frc.robot.Subsystems;
-
-import java.lang.invoke.ConstantBootstraps;
 
 import com.ctre.phoenix.led.Animation;
 import com.ctre.phoenix.led.CANdle;
@@ -25,17 +22,9 @@ import com.ctre.phoenix.led.TwinkleAnimation.TwinklePercent;
 import com.ctre.phoenix.led.TwinkleOffAnimation;
 import com.ctre.phoenix.led.TwinkleOffAnimation.TwinkleOffPercent;
 
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
-import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj.Timer;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import frc.robot.Constants;
 
 
 public class CANdleSystem extends SubsystemBase {
@@ -61,14 +50,13 @@ public class CANdleSystem extends SubsystemBase {
         SetAll,
 
     }
-    public Elevator m_elevator;
     private AnimationTypes m_currentAnimation;
 
     public boolean isflow = false;
+    public Constants.Elevator.State m_current_state = Constants.Elevator.State.START_AUTO;
 
     public CANdleSystem(Elevator elevator) {
         //this.joystick = joy;
-        this.m_elevator = elevator;
         changeAnimation(AnimationTypes.SetAll);
         CANdleConfiguration configAll = new CANdleConfiguration();
         configAll.statusLedOffWhenActive = false;
@@ -81,7 +69,7 @@ public class CANdleSystem extends SubsystemBase {
     }
 
     public void incrementAnimation() {
-        m_elevator.m_current_state = Constants.Elevator.State.FLOW;
+        m_current_state = Constants.Elevator.State.FLOW;
         switch(m_currentAnimation) {
             case ColorFlow: changeAnimation(AnimationTypes.Fire); break;
             case Fire: changeAnimation(AnimationTypes.Larson); break;
@@ -96,7 +84,7 @@ public class CANdleSystem extends SubsystemBase {
         }
     }
     public void decrementAnimation() {
-        m_elevator.m_current_state = Constants.Elevator.State.FLOW;
+        m_current_state = Constants.Elevator.State.FLOW;
         switch(m_currentAnimation) {
             case ColorFlow: changeAnimation(AnimationTypes.TwinkleOff); break;
             case Fire: changeAnimation(AnimationTypes.ColorFlow); break;
@@ -110,12 +98,10 @@ public class CANdleSystem extends SubsystemBase {
             case SetAll: changeAnimation(AnimationTypes.ColorFlow); break;
         }
     }
-    public void Changecolor(Constants.Elevator.State state) {
-        m_elevator.m_current_state = state;//将颜色变为装逼灯
+    public void Changecolor(Constants.Elevator.State state) {//change color according to the position of elevator
+        m_current_state = state;
  
     }
-
-
 
     public void setOff() {
         m_candle1.animate(null);
@@ -250,9 +236,12 @@ public class CANdleSystem extends SubsystemBase {
     @Override
     public void periodic() {
         //System.out.println("m_currentstate: " + m_elevator.m_current_state);
-        switch(m_elevator.m_current_state) {
-            case START:
+        switch(m_current_state) {
+            case START_OPERATED:
                 setOff();
+                break;
+            case START_AUTO:
+                setOrange();
                 break;
             case INTAKE:
                 setRed();

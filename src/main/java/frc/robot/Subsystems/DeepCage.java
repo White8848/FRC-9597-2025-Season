@@ -144,8 +144,11 @@ public class DeepCage extends SubsystemBase {
     //     m_deepCagePitch.setControl(m_deepCagePitchPositionRequest.withPosition(position));
     // }
 
-
-
+    /**
+     * intakeBall using pipwheel and wheel
+     * 
+     * 
+     */
     public Command intakeBall() {
         return runEnd(() -> {
             setDeepCagePitchPosition(Constants.DEEPCAGE.INTAKE_BALL_POSITION1);
@@ -157,6 +160,11 @@ public class DeepCage extends SubsystemBase {
         });
     }
 
+    /**
+     * ejectball using pipwheel and wheel
+     * 
+     * 
+     */
     public Command ejectBall() {
         return runEnd(() -> {
             setIntakeWheelVelocity(Constants.DEEPCAGE.EJECT_BALL_SPEED);
@@ -166,6 +174,11 @@ public class DeepCage extends SubsystemBase {
         });
     }
 
+    /**
+     * deepCagePitchUp with a certain velocity
+     * 
+     * 
+     */
     public Command deepCagePitchUp() {
         return runEnd(() -> {
             setDeepCagePitchVelocity(Constants.DEEPCAGE.PITCH_UP_SPEED);
@@ -175,7 +188,12 @@ public class DeepCage extends SubsystemBase {
             setDeepCagePitchPosition(currentPosition);
         });
     }
-
+    
+    /**
+     * deepCagePitchDown with a certain velocity
+     * 
+     * 
+     */
     public Command deepCagePitchDown() {
         return runEnd(() -> {
             setDeepCagePitchVelocity(Constants.DEEPCAGE.PITCH_DOWN_SPEED);
@@ -186,7 +204,6 @@ public class DeepCage extends SubsystemBase {
         });
     }
 
-    
     /**
      * Runs the SysId Quasistatic test in the given direction for the routine
      * specified by {@link #m_sysIdRoutineToApply}.
