@@ -71,6 +71,12 @@
           "data": {
             "pathName": "Path4_Blue"
           }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.5
+          }
         }
       ]
     }

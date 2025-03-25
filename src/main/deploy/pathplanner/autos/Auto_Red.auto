@@ -48,22 +48,9 @@
           }
         },
         {
-          "type": "parallel",
+          "type": "named",
           "data": {
-            "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Path3_UP_Red"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "coral"
-                }
-              }
-            ]
+            "name": "coral"
           }
         },
         {
