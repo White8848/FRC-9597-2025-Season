@@ -187,7 +187,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         
         // initialize camera system
         cameraEstimators.put(
-            new PhotonCamera("Camera_left"),
+            new PhotonCamera("Camera_front"),
             new PhotonPoseEstimator(
                 aprilTagFieldLayout,
                 PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
@@ -201,16 +201,16 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             )
         );
         cameraEstimators.put(
-            new PhotonCamera("Camera_right"), 
+            new PhotonCamera("Camera_back"), 
             new PhotonPoseEstimator(
                 aprilTagFieldLayout,
                 PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
                 new Transform3d(
-                    new Translation3d(0.31, -0.31, 0.5),
+                    new Translation3d(-0.31, -0.31, 0.5),
                     new Rotation3d(     
                         0,
                         Units.degreesToRadians(0),//pitch
-                        Units.degreesToRadians(0))//yaw
+                        Units.degreesToRadians(180))//yaw
                 )
             )
         );
@@ -239,7 +239,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                         .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())), // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
                 new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
                         new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
-                        new PIDConstants(5.0, 0.0, 0.0) // Rotation PID constants
+                        new PIDConstants(6.5, 0.0, 0.0) // Rotation PID constants
                 ),
                 robotConfig,//load the parameters from the gui
                 () -> {
@@ -257,8 +257,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 this // Reference to this subsystem to set requirements
         );
         AutoBuilder.resetOdom(Constants.Vision.m_initialPose);
-
-
 
     }
 
@@ -329,7 +327,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                     calculateAverageDistance(latestResult.targets),
                     driveState.Speeds
                 );
-              
+                
                 if(kUseVision){//if vision is enabled
                     addVisionMeasurement(
                         pose.estimatedPose.toPose2d(),
