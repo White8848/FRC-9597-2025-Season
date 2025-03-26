@@ -27,10 +27,7 @@ import frc.robot.Subsystems.Claw;
 import frc.robot.Subsystems.CommandSwerveDrivetrain;
 import frc.robot.Subsystems.DeepCage;
 import frc.robot.Subsystems.Elevator;
-import frc.robot.commands.AutoAimCoralCommand;
 import frc.robot.generated.TunerConstants;
-
-import frc.robot.commands.AutoAimCoralCommand;
 
 //import frc.robot.commands.AutoAlignToAprilTagCommand;
 
