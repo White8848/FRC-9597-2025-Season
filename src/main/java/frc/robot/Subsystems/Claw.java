@@ -269,7 +269,7 @@ public class Claw extends SubsystemBase {
                         }
                     },
   
-            () -> new WaitCommand(0.1).andThen(() -> setClawPipeWheelVelocity(0)).schedule()
+            () -> new WaitCommand(0.15).andThen(() -> setClawPipeWheelVelocity(0)).schedule()
                 //setClawPipeWheelVelocity(0);
                 //System.out.println("Ball is detected: ");
         
