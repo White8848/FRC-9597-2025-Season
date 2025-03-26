@@ -172,6 +172,7 @@ public class Elevator extends SubsystemBase {
                     m_elevatorPosition = Constants.Elevator.ELEVATOR_GETBALL2;
                     break;
                 case BARGE:
+                default:
                     m_clawPosition = Constants.Claw.CLAW_PITCH_BARGE;
                     m_elevatorPosition = Constants.Elevator.ELEVATOR_BARGE;
                     break;
