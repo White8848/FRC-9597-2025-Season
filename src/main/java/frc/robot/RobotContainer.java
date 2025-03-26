@@ -27,7 +27,10 @@ import frc.robot.Subsystems.Claw;
 import frc.robot.Subsystems.CommandSwerveDrivetrain;
 import frc.robot.Subsystems.DeepCage;
 import frc.robot.Subsystems.Elevator;
+import frc.robot.commands.AutoAimCoralCommand;
 import frc.robot.generated.TunerConstants;
+
+import frc.robot.commands.AutoAimCoralCommand;
 
 //import frc.robot.commands.AutoAlignToAprilTagCommand;
 
@@ -145,9 +148,11 @@ public class RobotContainer {
         m_driverJoystick.leftTrigger().whileTrue(claw.clawWheelbacklittle());
 
         //choose if  using vision data
-        m_driverJoystick.b().onTrue(drivetrain.ChangeVisionDataStatus().
+        m_driverJoystick.y().onTrue(drivetrain.ChangeVisionDataStatus().
                                 andThen((new InstantCommand(() -> candle.Changecolor(drivetrain.Get_Auto_State()), candle))));
 
+
+        // m_driverJoystick.x().whileTrue(new AutoAimCoralCommand(drivetrain));//auto aim to the target
         //m_driverJoystick.y().whileTrue(new AutoAlignToAprilTagCommand(drivetrain));//auto align to the tag
 
 
