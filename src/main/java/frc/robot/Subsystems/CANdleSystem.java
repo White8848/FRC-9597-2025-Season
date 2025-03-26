@@ -26,16 +26,15 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import frc.robot.Constants;
 
-
 public class CANdleSystem extends SubsystemBase {
     private final CANdle m_candle1 = new CANdle(Constants.CANDLE.CANdleID1, "canivore");
     private final CANdle m_candle2 = new CANdle(Constants.CANDLE.CANdleID2, "canivore");
-    private final int LedCount = 300;
-    //private CommandXboxController joystick;
+    private final int LedCount = 40;
+    // private CommandXboxController joystick;
 
     private Animation m_toAnimate = null;
 
-    public  boolean hasSetFlowEffect = false; 
+    public boolean hasSetFlowEffect = false;
 
     public enum AnimationTypes {
         ColorFlow,
@@ -50,13 +49,14 @@ public class CANdleSystem extends SubsystemBase {
         SetAll,
 
     }
+
     private AnimationTypes m_currentAnimation;
 
     public boolean isflow = false;
     public Constants.Elevator.State m_current_state = Constants.Elevator.State.START_AUTO;
 
     public CANdleSystem(Elevator elevator) {
-        //this.joystick = joy;
+        // this.joystick = joy;
         changeAnimation(AnimationTypes.SetAll);
         CANdleConfiguration configAll = new CANdleConfiguration();
         configAll.statusLedOffWhenActive = false;
@@ -70,37 +70,79 @@ public class CANdleSystem extends SubsystemBase {
 
     public void incrementAnimation() {
         m_current_state = Constants.Elevator.State.FLOW;
-        switch(m_currentAnimation) {
-            case ColorFlow: changeAnimation(AnimationTypes.Fire); break;
-            case Fire: changeAnimation(AnimationTypes.Larson); break;
-            case Larson: changeAnimation(AnimationTypes.Rainbow); break;
-            case Rainbow: changeAnimation(AnimationTypes.RgbFade); break;
-            case RgbFade: changeAnimation(AnimationTypes.SingleFade); break;
-            case SingleFade: changeAnimation(AnimationTypes.Strobe); break;
-            case Strobe: changeAnimation(AnimationTypes.Twinkle); break;
-            case Twinkle: changeAnimation(AnimationTypes.TwinkleOff); break;
-            case TwinkleOff: changeAnimation(AnimationTypes.ColorFlow); break;
-            case SetAll: changeAnimation(AnimationTypes.ColorFlow); break;
+        switch (m_currentAnimation) {
+            case ColorFlow:
+                changeAnimation(AnimationTypes.Fire);
+                break;
+            case Fire:
+                changeAnimation(AnimationTypes.Larson);
+                break;
+            case Larson:
+                changeAnimation(AnimationTypes.Rainbow);
+                break;
+            case Rainbow:
+                changeAnimation(AnimationTypes.RgbFade);
+                break;
+            case RgbFade:
+                changeAnimation(AnimationTypes.SingleFade);
+                break;
+            case SingleFade:
+                changeAnimation(AnimationTypes.Strobe);
+                break;
+            case Strobe:
+                changeAnimation(AnimationTypes.Twinkle);
+                break;
+            case Twinkle:
+                changeAnimation(AnimationTypes.TwinkleOff);
+                break;
+            case TwinkleOff:
+                changeAnimation(AnimationTypes.ColorFlow);
+                break;
+            case SetAll:
+                changeAnimation(AnimationTypes.ColorFlow);
+                break;
         }
     }
+
     public void decrementAnimation() {
         m_current_state = Constants.Elevator.State.FLOW;
-        switch(m_currentAnimation) {
-            case ColorFlow: changeAnimation(AnimationTypes.TwinkleOff); break;
-            case Fire: changeAnimation(AnimationTypes.ColorFlow); break;
-            case Larson: changeAnimation(AnimationTypes.Fire); break;
-            case Rainbow: changeAnimation(AnimationTypes.Larson); break;
-            case RgbFade: changeAnimation(AnimationTypes.Rainbow); break;
-            case SingleFade: changeAnimation(AnimationTypes.RgbFade); break;
-            case Strobe: changeAnimation(AnimationTypes.SingleFade); break;
-            case Twinkle: changeAnimation(AnimationTypes.Strobe); break;
-            case TwinkleOff: changeAnimation(AnimationTypes.Twinkle); break;
-            case SetAll: changeAnimation(AnimationTypes.ColorFlow); break;
+        switch (m_currentAnimation) {
+            case ColorFlow:
+                changeAnimation(AnimationTypes.TwinkleOff);
+                break;
+            case Fire:
+                changeAnimation(AnimationTypes.ColorFlow);
+                break;
+            case Larson:
+                changeAnimation(AnimationTypes.Fire);
+                break;
+            case Rainbow:
+                changeAnimation(AnimationTypes.Larson);
+                break;
+            case RgbFade:
+                changeAnimation(AnimationTypes.Rainbow);
+                break;
+            case SingleFade:
+                changeAnimation(AnimationTypes.RgbFade);
+                break;
+            case Strobe:
+                changeAnimation(AnimationTypes.SingleFade);
+                break;
+            case Twinkle:
+                changeAnimation(AnimationTypes.Strobe);
+                break;
+            case TwinkleOff:
+                changeAnimation(AnimationTypes.Twinkle);
+                break;
+            case SetAll:
+                changeAnimation(AnimationTypes.ColorFlow);
+                break;
         }
     }
-    public void Changecolor(Constants.Elevator.State state) {//change color according to the position of elevator
+
+    public void Changecolor(Constants.Elevator.State state) {// change color according to the position of elevator
         m_current_state = state;
- 
+
     }
 
     public void setOff() {
@@ -110,15 +152,15 @@ public class CANdleSystem extends SubsystemBase {
         m_candle2.setLEDs(0, 0, 0);
 
     }
-    
 
     public void setWhite() {
         m_candle1.animate(null);
         m_candle2.animate(null);
         m_candle1.setLEDs(255, 255, 255);
         m_candle2.setLEDs(255, 255, 255);
-        
+
     }
+
     public void setRed() {
         m_candle1.animate(null);
         m_candle2.animate(null);
@@ -126,32 +168,37 @@ public class CANdleSystem extends SubsystemBase {
         m_candle2.setLEDs(255, 0, 0);
 
     }
+
     public void setGreen() {
         m_candle1.animate(null);
         m_candle2.animate(null);
         m_candle1.setLEDs(0, 255, 0);
         m_candle2.setLEDs(0, 255, 0);
- 
+
     }
+
     public void setBlue() {
         m_candle1.animate(null);
         m_candle2.animate(null);
         m_candle1.setLEDs(0, 0, 255);
         m_candle2.setLEDs(0, 0, 255);
     }
-    public void setYellow(){ 
+
+    public void setYellow() {
         m_candle1.animate(null);
         m_candle2.animate(null);
         m_candle1.setLEDs(255, 255, 0);
         m_candle2.setLEDs(255, 255, 0);
 
     }
+
     public void setCyan() {
         m_candle1.animate(null);
         m_candle2.animate(null);
         m_candle1.setLEDs(0, 255, 255);
         m_candle2.setLEDs(0, 255, 255);
     }
+
     public void setMagenta() {
         m_candle1.animate(null);
         m_candle2.animate(null);
@@ -159,6 +206,7 @@ public class CANdleSystem extends SubsystemBase {
         m_candle2.setLEDs(255, 0, 255);
 
     }
+
     public void setOrange() {
         m_candle1.animate(null);
         m_candle2.animate(null);
@@ -167,37 +215,63 @@ public class CANdleSystem extends SubsystemBase {
 
     }
 
-
-
     /* Wrappers so we can access the CANdle from the subsystem */
-    public double getVbat1() { return m_candle1.getBusVoltage(); }
-    public double getVbat2() { return m_candle2.getBusVoltage(); }
+    public double getVbat1() {
+        return m_candle1.getBusVoltage();
+    }
 
-    public double get5V1() { return m_candle1.get5VRailVoltage(); }
-    public double get5V2() { return m_candle2.get5VRailVoltage(); }
+    public double getVbat2() {
+        return m_candle2.getBusVoltage();
+    }
 
-    public double getCurrent1() { return m_candle1.getCurrent(); }
-    public double getCurrent2() { return m_candle2.getCurrent(); }
+    public double get5V1() {
+        return m_candle1.get5VRailVoltage();
+    }
 
-    public double getTemperature1() { return m_candle1.getTemperature(); }
-    public double getTemperature2() { return m_candle2.getTemperature(); }
+    public double get5V2() {
+        return m_candle2.get5VRailVoltage();
+    }
 
-    public void configBrightness(double percent) { m_candle1.configBrightnessScalar(percent, 0);
-                                                   m_candle2.configBrightnessScalar(percent, 0); }
-    public void configLos(boolean disableWhenLos) { m_candle1.configLOSBehavior(disableWhenLos, 0); 
-                                                    m_candle2.configLOSBehavior(disableWhenLos, 0); }
-    public void configLedType(LEDStripType type) { m_candle1.configLEDType(type, 0); 
-                                                   m_candle2.configLEDType(type, 0); }
-    public void configStatusLedBehavior(boolean offWhenActive) { m_candle1.configStatusLedState(offWhenActive, 0); 
-                                                                 m_candle2.configStatusLedState(offWhenActive, 0); }
+    public double getCurrent1() {
+        return m_candle1.getCurrent();
+    }
 
+    public double getCurrent2() {
+        return m_candle2.getCurrent();
+    }
 
+    public double getTemperature1() {
+        return m_candle1.getTemperature();
+    }
+
+    public double getTemperature2() {
+        return m_candle2.getTemperature();
+    }
+
+    public void configBrightness(double percent) {
+        m_candle1.configBrightnessScalar(percent, 0);
+        m_candle2.configBrightnessScalar(percent, 0);
+    }
+
+    public void configLos(boolean disableWhenLos) {
+        m_candle1.configLOSBehavior(disableWhenLos, 0);
+        m_candle2.configLOSBehavior(disableWhenLos, 0);
+    }
+
+    public void configLedType(LEDStripType type) {
+        m_candle1.configLEDType(type, 0);
+        m_candle2.configLEDType(type, 0);
+    }
+
+    public void configStatusLedBehavior(boolean offWhenActive) {
+        m_candle1.configStatusLedState(offWhenActive, 0);
+        m_candle2.configStatusLedState(offWhenActive, 0);
+    }
 
     public void changeAnimation(AnimationTypes toChange) {
         m_currentAnimation = toChange;
-        
-        switch(toChange)
-        {
+
+        switch (m_currentAnimation) {
             case ColorFlow:
                 m_toAnimate = new ColorFlowAnimation(128, 20, 70, 0, 0.7, LedCount, Direction.Forward);
                 break;
@@ -228,15 +302,15 @@ public class CANdleSystem extends SubsystemBase {
             case SetAll:
                 m_toAnimate = null;
                 break;
-  
+
         }
 
     }
 
     @Override
     public void periodic() {
-        //System.out.println("m_currentstate: " + m_elevator.m_current_state);
-        switch(m_current_state) {
+        // System.out.println("m_currentstate: " + m_elevator.m_current_state);
+        switch (m_current_state) {
             case START_OPERATED:
                 setOff();
                 break;
@@ -265,8 +339,15 @@ public class CANdleSystem extends SubsystemBase {
                 setWhite();
                 break;
             case FLOW:
-                m_candle1.animate(new RainbowAnimation(1, 1, LedCount));//single showoff lights
-                m_candle2.animate(new RainbowAnimation(1, 1, LedCount));
+            //     m_candle1.animate(new RainbowAnimation(1, 1, LedCount));// single showoff lights
+            //     m_candle2.animate(new RainbowAnimation(1, 1, LedCount));
+                // m_candle1.animate(m_toAnimate);
+                // m_candle2.animate(m_toAnimate);
+                // m_candle1.animate(new FireAnimation(0.5, 0.05, LedCount, 0.7, 0.3));
+                // m_candle2.animate(new FireAnimation(0.5, 0.05, LedCount, 0.7, 0.3));
+                m_candle1.animate(new LarsonAnimation(0, 255, 46, 0, 0.6, LedCount, BounceMode.Front, 6));
+                m_candle2.animate(new LarsonAnimation(0, 255, 46, 0, 0.6, LedCount, BounceMode.Front, 6));
+
                 break;
             default:
                 setOff();
