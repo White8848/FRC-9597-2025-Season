@@ -339,8 +339,9 @@ public class CANdleSystem extends SubsystemBase {
                 setWhite();
                 break;
             case FLOW:
-            //     m_candle1.animate(new RainbowAnimation(1, 1, LedCount));// single showoff lights
-            //     m_candle2.animate(new RainbowAnimation(1, 1, LedCount));
+                // m_candle1.animate(new RainbowAnimation(1, 1, LedCount));// single showoff
+                // lights
+                // m_candle2.animate(new RainbowAnimation(1, 1, LedCount));
                 // m_candle1.animate(m_toAnimate);
                 // m_candle2.animate(m_toAnimate);
                 // m_candle1.animate(new FireAnimation(0.5, 0.05, LedCount, 0.7, 0.3));
