@@ -28,8 +28,8 @@ import frc.robot.Subsystems.Claw;
 import frc.robot.Subsystems.CommandSwerveDrivetrain;
 import frc.robot.Subsystems.DeepCage;
 import frc.robot.Subsystems.Elevator;
+import frc.robot.commands.AutoAlignCommand;
 import frc.robot.generated.TunerConstants;
-import frc.robot.Subsystems.AutoAlign;
 
 //import frc.robot.commands.AutoAlignToAprilTagCommand;
 
@@ -70,8 +70,6 @@ public class RobotContainer {
     public final Elevator elevator = new Elevator();
     public final CANdleSystem candle = new CANdleSystem(elevator);
     public final Claw claw = new Claw();
-
-    private final AutoAlign autoAlign = new AutoAlign(drivetrain);
 
     // auto chooser
     private final SendableChooser<Command> autoChooser;
@@ -155,8 +153,8 @@ public class RobotContainer {
         m_driverJoystick.y().onTrue(drivetrain.ChangeVisionDataStatus()
                 .andThen((new InstantCommand(() -> candle.Changecolor(drivetrain.Get_Auto_State()), candle))));
 
-        m_driverJoystick.x().whileTrue(autoAlign.AutoAlignCorol(Constants.AutoAlign.Side.LEFT));// left
-        m_driverJoystick.b().whileTrue(autoAlign.AutoAlignCorol(Constants.AutoAlign.Side.RIGHT));// right
+        m_driverJoystick.x().whileTrue(new AutoAlignCommand(drivetrain,Constants.AutoAlign.Side.LEFT));// left
+        m_driverJoystick.b().whileTrue(new AutoAlignCommand(drivetrain,Constants.AutoAlign.Side.RIGHT));// right
 
         // ************************************************************ (operator)
         // ********************************************************

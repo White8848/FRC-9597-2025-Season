@@ -1,4 +1,4 @@
-package frc.robot.Subsystems;
+package frc.robot.commands;
 
 import java.util.Set;
 
@@ -15,19 +15,27 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 
 import frc.robot.Constants.AutoAlign.Side;
+import frc.robot.Subsystems.CommandSwerveDrivetrain;
 
-public class AutoAlign {
-    CommandSwerveDrivetrain drivetrain;
+public class AutoAlignCommand extends Command {
+    private CommandSwerveDrivetrain drivetrain;
     // Create the constraints to use while pathfinding
-    PathConstraints constraints = new PathConstraints(
+    private PathConstraints constraints = new PathConstraints(
             2.5, 4.0,
             Units.degreesToRadians(540), Units.degreesToRadians(720));
 
-    public AutoAlign(CommandSwerveDrivetrain drivetrain) {
+    private Side side;
+
+    private Command currentAutoCommand; // 添加到类成员变量中
+
+    public AutoAlignCommand(CommandSwerveDrivetrain drivetrain, Side side) {
         this.drivetrain = drivetrain;
+        this.side = side;
+        addRequirements(this.drivetrain);
     }
 
-    public Command AutoAlignCorol(Side side) {
+    @Override
+    public void initialize() {
         Pose2d currentPose = drivetrain.getState().Pose;
         Pose2d targetPose = currentPose;
         Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
@@ -156,13 +164,25 @@ public class AutoAlign {
         }
         SmartDashboard.putNumber("autoSector", sector);
 
-        final Pose2d finalTargetPose = targetPose;
-
-        return Commands.defer(() -> AutoBuilder.pathfindToPose(
-                finalTargetPose,
+        currentAutoCommand = AutoBuilder.pathfindToPose(
+                targetPose,
                 this.constraints,
-                0.0 // Goal end velocity in meters/sec
-        ), Set.of(this.drivetrain));
+                0.0);
+        currentAutoCommand.schedule();
+    }
+
+
+    @Override
+    public void end(boolean interrupted) {
+        if (currentAutoCommand != null && currentAutoCommand.isScheduled()) {
+            currentAutoCommand.cancel(); // 取消正在运行的路径
+        }
+    }
+
+    @Override
+    public boolean isFinished() {
+        // TODO Auto-generated method stub
+        return false;
     }
 
     /**
@@ -174,7 +194,7 @@ public class AutoAlign {
      * @param cy 六边形中心y坐标
      * @return 区域编号 0~5
      */
-    public static int getHexSector(double x, double y, double cx, double cy) {
+    public int getHexSector(double x, double y, double cx, double cy) {
         double dx = x - cx;
         double dy = y - cy;
 
@@ -184,9 +204,13 @@ public class AutoAlign {
             angleDeg += 360; // 转为 [0, 360)
 
         // 将起点平移到 -30°
-        double shiftedAngle = (angleDeg - 30) % 360;
+        double shiftedAngle = (angleDeg + 30) % 360;
 
         int sector = (int) Math.floor(shiftedAngle / 60.0); // 每 60° 一区
+
+        SmartDashboard.putNumber("dx", dx);
+        SmartDashboard.putNumber("dy", dy);
+
         return sector; // 0~5
     }
 
