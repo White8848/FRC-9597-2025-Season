@@ -17,25 +17,18 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants.AutoAlign.Side;
 import frc.robot.Subsystems.CommandSwerveDrivetrain;
 
-public class AutoAlignCommand extends Command {
+public class AutoAlign {
     private CommandSwerveDrivetrain drivetrain;
     // Create the constraints to use while pathfinding
     private PathConstraints constraints = new PathConstraints(
             2.5, 4.0,
             Units.degreesToRadians(540), Units.degreesToRadians(720));
 
-    private Side side;
-
-    private Command currentAutoCommand; // 添加到类成员变量中
-
-    public AutoAlignCommand(CommandSwerveDrivetrain drivetrain, Side side) {
+    public AutoAlign(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
-        this.side = side;
-        addRequirements(this.drivetrain);
     }
 
-    @Override
-    public void initialize() {
+    public Pose2d getAlignTarget(Side side) {
         Pose2d currentPose = drivetrain.getState().Pose;
         Pose2d targetPose = currentPose;
         Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Blue);
@@ -164,25 +157,14 @@ public class AutoAlignCommand extends Command {
         }
         SmartDashboard.putNumber("autoSector", sector);
 
-        currentAutoCommand = AutoBuilder.pathfindToPose(
-                targetPose,
-                this.constraints,
-                0.0);
-        currentAutoCommand.schedule();
+        return targetPose;
     }
 
-
-    @Override
-    public void end(boolean interrupted) {
-        if (currentAutoCommand != null && currentAutoCommand.isScheduled()) {
-            currentAutoCommand.cancel(); // 取消正在运行的路径
-        }
-    }
-
-    @Override
-    public boolean isFinished() {
-        // TODO Auto-generated method stub
-        return false;
+    public Command getAutoCommand(Side side) {
+        return Commands.defer(()->{
+            Pose2d targetPose = getAlignTarget(side);
+            return AutoBuilder.pathfindToPose(targetPose, constraints, 0.0);
+        },Set.of(drivetrain));
     }
 
     /**

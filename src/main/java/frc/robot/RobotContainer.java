@@ -22,13 +22,13 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-
+import frc.robot.Constants.AutoAlign.Side;
 import frc.robot.Subsystems.CANdleSystem;
 import frc.robot.Subsystems.Claw;
 import frc.robot.Subsystems.CommandSwerveDrivetrain;
 import frc.robot.Subsystems.DeepCage;
 import frc.robot.Subsystems.Elevator;
-import frc.robot.commands.AutoAlignCommand;
+import frc.robot.commands.AutoAlign;
 import frc.robot.generated.TunerConstants;
 
 //import frc.robot.commands.AutoAlignToAprilTagCommand;
@@ -73,6 +73,8 @@ public class RobotContainer {
 
     // auto chooser
     private final SendableChooser<Command> autoChooser;
+
+    public final AutoAlign autoAlign = new AutoAlign(drivetrain);
 
     // 在 RobotContainer 类中创建初始化命令
     public Command getAutoInitCommand() {
@@ -153,8 +155,8 @@ public class RobotContainer {
         m_driverJoystick.y().onTrue(drivetrain.ChangeVisionDataStatus()
                 .andThen((new InstantCommand(() -> candle.Changecolor(drivetrain.Get_Auto_State()), candle))));
 
-        m_driverJoystick.x().whileTrue(new AutoAlignCommand(drivetrain,Constants.AutoAlign.Side.LEFT));// left
-        m_driverJoystick.b().whileTrue(new AutoAlignCommand(drivetrain,Constants.AutoAlign.Side.RIGHT));// right
+        m_driverJoystick.x().whileTrue(autoAlign.getAutoCommand(Side.LEFT));// left
+        m_driverJoystick.b().whileTrue(autoAlign.getAutoCommand(Side.RIGHT));// right2
 
         // ************************************************************ (operator)
         // ********************************************************
